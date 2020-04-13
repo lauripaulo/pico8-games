@@ -22,7 +22,7 @@ me={
 	flipx=false,
 	moving=false,
 	pxmoved=0,
- lookmap={0,0},
+ lm={0,0},
  keys=0,
  gold=0
 }
@@ -30,8 +30,7 @@ me={
 -- init player
 me.x=me.mapx*8
 me.y=me.mapy*8
-me.lookmap=me.mapx
-me.loopmap=me.mapy
+me.lm={me.mapx,me.mapy}
 
 -- draw debug table
 debug={}
@@ -125,76 +124,86 @@ function update_player_map(move)
 	me.dr=move
 	-- colision
 	if map_collide(me,0) then
-			-- map look for x,y
-			local mlx=me.lookmap[1]
-			local mly=me.lookmap[2]
-			printh("you are x,y="..me.mapx..","..me.mapy)
-			printh("looking at x,y="..me.lookmap[1]..","..me.lookmap[2])
 		if map_collide(me,1) then
-			printh("found a door")
-			local door=mget(mlx,mly)
-			if door==2 then
-			 mset(mlx,mly,3)
- 		 sfx(1)
-			elseif door==18 then
-			 mset(mlx,mly,19)
-			 sfx(1)
-			elseif me.keys>0 then
-			 me.keys-=1
-				if door==34 then
-				 mset(mlx,mly,35)
-				else
-				 mset(mlx,mly,51)
-				end
-			 sfx(1)				
-			else 
-			 -- cant open
-			 sfx(0)
-			end
+			found_door(me.lm[1],me.lm[2])
 		elseif map_collide(me,2) then
-			printh("found a key")
-			local key=mget(mlx,mly)
-			if key==36 then
-				mset(mlx,mly,37)
-				me.keys+=1
- 			sfx(3)
- 		else
- 		 -- cant do anything
- 		 sfx(0)
-			end
+			found_key(me.lm[1],me.lm[2])
 		elseif map_collide(me,3) then
-			printh("found a chest!")
-			local chest=mget(mlx,mly)
-			if chest==38 then
-				mset(mlx,mly,39)
-				sfx(4)
-			else 
-			 -- already looted
-			 sfx(0)
-			end
+			found_chest(me.lm[1],me.lm[2])
 		else
-		 -- just cant go on...
 			sfx(0)
 		end
 		me.dr=dr_empty
 		me.moving=false
 		me.pxmoved=0
 	else
-		me.dr=move
-		me.moving=true
-		-- update map x,y
-	 me.mapx+=me.dr[4]
-	 me.mapx-=me.dr[3]
-	 me.mapy+=me.dr[2]
-	 me.mapy-=me.dr[1]
+		calc_player_map(move)
 	end
+end
+
+function found_door(mlx,mly)
+	printh("found a door")
+	local door=mget(mlx,mly)
+	if door==2 then
+	 mset(mlx,mly,3)
+	 sfx(1)
+	elseif door==18 then
+	 mset(mlx,mly,19)
+	 sfx(1)
+	elseif me.keys>0 then
+	 me.keys-=1
+		if door==34 then
+		 mset(mlx,mly,35)
+		else
+		 mset(mlx,mly,51)
+		end
+	 sfx(1)				
+	else 
+	 -- cant open
+	 sfx(0)
+	end
+end
+
+function found_key(mlx,mly)
+	printh("found a key")
+	local key=mget(mlx,mly)
+	if key==36 then
+		mset(mlx,mly,37)
+		me.keys+=1
+		sfx(3)
+	else
+	 -- cant do anything
+	 sfx(0)
+	end
+end
+
+function found_chest(mlx,mly)
+	printh("found a chest!")
+	local chest=mget(mlx,mly)
+	if chest==38 then
+		mset(mlx,mly,39)
+		sfx(4)
+	else 
+	 -- already looted
+	 sfx(0)
+	end
+end
+
+function calc_player_map(move)
+	me.dr=move
+	me.moving=true
+	-- update map x,y
+ me.mapx+=me.dr[4]
+ me.mapx-=me.dr[3]
+ me.mapy+=me.dr[2]
+ me.mapy-=me.dr[1]
 end
 
 --
 -- do the player move
 -- animation calcs
 --
-function calc_player_move()
+function calc_player_move(ob)
  -- update screen x,y
  me.x+=me.dr[4]
  me.x-=me.dr[3]
@@ -254,7 +263,7 @@ function map_collide(obj, flag)
 	end
 	
 	-- it was looking to...
-	obj.lookmap={x1,y1}
+	obj.lm={x1,y1}
 
 	--debug
 --	xy={x1=x1*8,y1=y1*8,x2=x1*8+7,y2=y1*8+7}
