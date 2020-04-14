@@ -9,8 +9,6 @@ me={
 	name="player",
 	x=0,
 	y=0,
-	h=8, -- height size in pixels
-	w=8, -- width size in pixels
 	mapx=1, -- x in tile map
 	mapy=1, -- y in tile map
 	vl=1, -- velocity
@@ -32,6 +30,10 @@ me.x=me.mapx*8
 me.y=me.mapy*8
 me.lm={me.mapx,me.mapy}
 
+-- init mobs
+mobs={}
+mobid=0
+
 -- draw debug table
 debug={}
 
@@ -50,8 +52,13 @@ function _draw()
 	mapdraw(0, 0, 0, 0, 16, 16)
 
 	local cspr=me.sprs[me.cspr]
-
-	spr(cspr,me.x,me.y,1,1,me.flipx,me.flipy)
+	spr(cspr,me.x,me.y,1,1,me.flipx,false)
+	
+	-- moba
+	for mob in all(mobs) do
+		cspr=mob.sprs[mob.cspr]
+		spr(cspr,mob.x,mob.y,1,1,mob.flix,false)
+	end
 	
 	-- debug boxes
 	for obj in all(debug) do
@@ -65,6 +72,65 @@ end
 --
 function _update()
 	update_player()
+	update_mob()
+	moveall()
+	spawmobs()
+end
+
+function spawmobs()
+	if count(mobs)==0 then
+		mob=newmob(4,10,"ooze")
+		add(mobs,mob)
+		printh("new mob! mapx,mapy="..mob.mapx..","..mob.mapy.." - id:"..mob.id)
+	end
+end
+
+function update_mob()
+	for mob in all(mobs) do
+	 if not mob.moving then
+		 mob.dr=think(mob)
+		 if map_collide(mob,0) then
+		  mob.blocked=true
+--		  mob.dr=dr_idle
+		 else
+			 mob.blocked=false
+		  mob.moving=true
+		 	calc_map(mob)
+		 end
+		end
+	end
+end
+
+function think(mob)
+ printh("mob blocked:"..b2s(mob.blocked))
+ local move=mob.dr
+ printhmap("move>>",move)
+ if mob.blocked then
+  if move[4]==1 then
+  	move[4]=0
+  	move[3]=1
+  else
+  	move[4]=1
+  	move[3]=0
+  end
+ end
+ printhmap("move<<",move)
+	return move
+end
+
+function moveall()
+	if me.moving then
+		calc_move(me)
+		anispr(me)
+		-- player steps
+		sfx(2)
+		for mob in all(mobs) do
+			if mob.moving then
+				calc_move(mob)
+			 anispr(mob)
+			end
+		end
+	end
 end
 
 --
@@ -78,8 +144,6 @@ function update_player()
 	local bpress=false
 	
 	if me.moving then
-		calc_player_move()
-		anispr(me,bpress,4)
 	 return
 		
 	elseif btn(⬆️)
@@ -137,7 +201,7 @@ function update_player_map(move)
 		me.moving=false
 		me.pxmoved=0
 	else
-		calc_player_map(move)
+		calc_map(me)
 	end
 end
 
@@ -189,31 +253,24 @@ function found_chest(mlx,mly)
 	end
 end
 
-function calc_player_map(move)
-	me.dr=move
-	me.moving=true
-	-- update map x,y
- me.mapx+=me.dr[4]
- me.mapx-=me.dr[3]
- me.mapy+=me.dr[2]
- me.mapy-=me.dr[1]
+function calc_map(ob)
+	ob.moving=true
+ ob.mapx+=ob.dr[4]
+ ob.mapx-=ob.dr[3]
+ ob.mapy+=ob.dr[2]
+ ob.mapy-=ob.dr[1]
 end
 
---
--- do the player move
--- animation calcs
---
-function calc_player_move(ob)
+function calc_move(ob)
  -- update screen x,y
- me.x+=me.dr[4]
- me.x-=me.dr[3]
- me.y+=me.dr[2]
- me.y-=me.dr[1]
- me.pxmoved+=me.vl
- if me.pxmoved==8 then
- 	me.moving=false
- 	me.pxmoved=0
- 	me.dr=dr_idle
+ ob.x+=ob.dr[4]
+ ob.x-=ob.dr[3]
+ ob.y+=ob.dr[2]
+ ob.y-=ob.dr[1]
+ ob.pxmoved+=ob.vl
+ if ob.pxmoved==8 then
+ 	ob.moving=false
+ 	ob.pxmoved=0
 		debug={}
  end
 end
@@ -221,7 +278,8 @@ end
 -- helper
 
 -- change sprite
-function anispr(s,bprs,num)
+function anispr(s)
+ local num=count(s.sprs)
 	if s.tspr>1 then
 		if s.cspr==num then 
 			s.cspr=1
@@ -232,8 +290,6 @@ function anispr(s,bprs,num)
 	else
 		s.tspr+=s.vspr
 	end
-	-- player steps
-	sfx(2)
 end
 
 -- return if a move collid 
@@ -244,33 +300,53 @@ function map_collide(obj, flag)
 	-- moving to tile x,y ...
 	local x1=0    local y1=0
 	
-	-- ⬆️
 	if obj.dr[1]>0 then
-		x1=obj.mapx   y1=obj.mapy-1
-	
-	-- ⬇️
+		-- ⬆️
+		x1,y1=obj.mapx,obj.mapy-1
 	elseif obj.dr[2]>0 then
-		x1=obj.mapx    y1=obj.mapy+1
-
- -- ⬅️
+		-- ⬇️	
+		x1,y1=obj.mapx,obj.mapy+1
 	elseif obj.dr[3]>0 then
-		x1=obj.mapx-1  y1=obj.mapy
-		
-	-- ➡️
+	 -- ⬅️
+		x1,y1=obj.mapx-1,obj.mapy		
 	elseif obj.dr[4]>=0 then
-		x1=obj.mapx+1  y1=obj.mapy
-	
+		-- ➡️
+		x1,y1=obj.mapx+1,obj.mapy
 	end
 	
 	-- it was looking to...
 	obj.lm={x1,y1}
 
 	--debug
---	xy={x1=x1*8,y1=y1*8,x2=x1*8+7,y2=y1*8+7}
---	add(debug,xy)
+	xy={x1=x1*8,y1=y1*8,x2=x1*8+7,y2=y1*8+7}
+	add(debug,xy)
 		
 	return fget(mget(x1,y1),flag)
 
+end
+
+function newmob(mx,my,typ)
+ mobid+=1
+ mob={
+		name=typ,
+		x=mx*8,
+		y=my*8,
+		mapx=mx, -- x in tile map
+		mapy=my, -- y in tile map
+		vl=1, -- velocity
+		tspr=0,
+	 dr={0,0,0,0},  -- ⬆️⬇️⬅️➡️
+		sprs={10,11,12,13}, -- sprites
+		cspr=1,	-- current sprite
+		vspr=.8, -- incr chg sprite
+		flipx=false,
+		moving=false,
+		pxmoved=0,
+	 lm={0,0},
+	 blocked=true, -- blocked on creation
+	 id=mobid
+	}
+	return mob
 end
 -->8
 -- world
@@ -282,15 +358,24 @@ end
 function b2s(bool)
 	return bool and 'true' or 'false'
 end
+
+function printhmap(name,m)
+ local i=1
+ printh("name:"..name)
+ for value in all(m) do
+ 	printh("->map["..i.."]="..value)
+ 	i+=1
+ end
+end
 __gfx__
 00000000555555550055550000555500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-000000005d55ddd5000d600000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-000000005dd5d555000aa00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-000000005d55d5d5000d600000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000555555d5000d600000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-0000000055d55dd5000d600000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-000000005ddd55d500046000000d6000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000555555550055550000555500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+000000005d55ddd5000d600000000000000000000000000000000000000000000000000000000000000000000000000000000000000040000000000000000000
+000000005dd5d555000aa00000000000000000000000000000000000000000000000000000000000000440000000444000044000000444000000000000000000
+000000005d55d5d5000d600000000000000000000000000000000000000000000000000000000000004444400004444400444440004444400000000000000000
+00000000555555d5000d6000000000000000000000000000000000000000000000000000000000000947c74400947c740447c7440047c7400000000000000000
+0000000055d55dd5000d600000000000000000000000000000000000000000000000000000000000094444440094444404444444044444400000000000000000
+000000005ddd55d500046000000d6000000000000000000000000000000000000000000000000000944444440944444409444444444444440000000000000000
+00000000555555550055550000555500000000000000000000000000000000000000000000000000999444990999999909999999999444990000000000000000
 00000000555555550000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 000000005d55ddd50000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 000000005dd5d5555000000550000005000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
