@@ -1,7 +1,7 @@
 pico-8 cartridge // http://www.pico-8.com
 version 18
 __lua__
--- main / vars
+-- global vars
 
 dr_idle={0,0,0,0}
 
@@ -37,107 +37,11 @@ mobid=0
 -- draw debug table
 debug={}
 
--- clear debug
-for i=1,5 do
-	printh("=-=-=-=-=-=-=")
-end
+printh("=-=-=-=-=-=-=")
+
 -->8
--- draw/update
+-- player
 
---
--- pico-8 drae callback
---
-function _draw()
-	cls()
-	mapdraw(0, 0, 0, 0, 16, 16)
-
-	local cspr=me.sprs[me.cspr]
-	spr(cspr,me.x,me.y,1,1,me.flipx,false)
-	
-	-- moba
-	for mob in all(mobs) do
-		cspr=mob.sprs[mob.cspr]
-		spr(cspr,mob.x,mob.y,1,1,mob.flix,false)
-	end
-	
-	-- debug boxes
-	for obj in all(debug) do
-		rect(obj.x1,obj.y1,obj.x2,obj.y2,8)	
-	end
-
-end
-
---
--- pico-8 update callback
---
-function _update()
-	update_player()
-	update_mob()
-	moveall()
-	spawmobs()
-end
-
-function spawmobs()
-	if count(mobs)==0 then
-		mob=newmob(4,10,"ooze")
-		add(mobs,mob)
-		printh("new mob! mapx,mapy="..mob.mapx..","..mob.mapy.." - id:"..mob.id)
-	end
-end
-
-function update_mob()
-	for mob in all(mobs) do
-	 if not mob.moving then
-		 mob.dr=think(mob)
-		 if map_collide(mob,0) then
-		  mob.blocked=true
---		  mob.dr=dr_idle
-		 else
-			 mob.blocked=false
-		  mob.moving=true
-		 	calc_map(mob)
-		 end
-		end
-	end
-end
-
-function think(mob)
- printh("mob blocked:"..b2s(mob.blocked))
- local move=mob.dr
- printhmap("move>>",move)
- if mob.blocked then
-  if move[4]==1 then
-  	move[4]=0
-  	move[3]=1
-  else
-  	move[4]=1
-  	move[3]=0
-  end
- end
- printhmap("move<<",move)
-	return move
-end
-
-function moveall()
-	if me.moving then
-		calc_move(me)
-		anispr(me)
-		-- player steps
-		sfx(2)
-		for mob in all(mobs) do
-			if mob.moving then
-				calc_move(mob)
-			 anispr(mob)
-			end
-		end
-	end
-end
-
---
--- update player in the
--- map and in screen
--- validation collisions.
---
 function update_player()
 	-- ⬆️⬇️⬅️➡️
 	local move={0,0,0,0}
@@ -253,29 +157,8 @@ function found_chest(mlx,mly)
 	end
 end
 
-function calc_map(ob)
-	ob.moving=true
- ob.mapx+=ob.dr[4]
- ob.mapx-=ob.dr[3]
- ob.mapy+=ob.dr[2]
- ob.mapy-=ob.dr[1]
-end
-
-function calc_move(ob)
- -- update screen x,y
- ob.x+=ob.dr[4]
- ob.x-=ob.dr[3]
- ob.y+=ob.dr[2]
- ob.y-=ob.dr[1]
- ob.pxmoved+=ob.vl
- if ob.pxmoved==8 then
- 	ob.moving=false
- 	ob.pxmoved=0
-		debug={}
- end
-end
 -->8
--- helper
+-- common
 
 -- change sprite
 function anispr(s)
@@ -325,6 +208,89 @@ function map_collide(obj, flag)
 
 end
 
+function moveall()
+	if me.moving then
+		calc_move(me)
+		anispr(me)
+		-- player steps
+		sfx(2)
+		for mob in all(mobs) do
+			if mob.moving then
+				calc_move(mob)
+			 anispr(mob)
+			end
+		end
+	end
+end
+
+
+function calc_map(ob)
+	ob.moving=true
+ ob.mapx+=ob.dr[4]
+ ob.mapx-=ob.dr[3]
+ ob.mapy+=ob.dr[2]
+ ob.mapy-=ob.dr[1]
+end
+
+function calc_move(ob)
+ -- update screen x,y
+ ob.x+=ob.dr[4]
+ ob.x-=ob.dr[3]
+ ob.y+=ob.dr[2]
+ ob.y-=ob.dr[1]
+ ob.pxmoved+=ob.vl
+ if ob.pxmoved==8 then
+ 	ob.moving=false
+ 	ob.pxmoved=0
+		debug={}
+ end
+end
+-->8
+-- mobs
+
+function spawmobs()
+	if count(mobs)==0 then
+		mob=newmob(4,10,"ooze")
+		add(mobs,mob)
+		printh("new mob! mapx,mapy="..mob.mapx..","..mob.mapy.." - id:"..mob.id)
+	end
+end
+
+function update_mob()
+	for mob in all(mobs) do
+	 if not mob.moving then
+		 mob.dr=think(mob)
+		 if map_collide(mob,0) then
+		  mob.blocked=true
+--		  mob.dr=dr_idle
+		 else
+			 mob.blocked=false
+		  mob.moving=true
+		 	calc_map(mob)
+		 end
+		end
+	end
+end
+
+function think(mob)
+ printh("mob blocked:"..b2s(mob.blocked))
+ local move=mob.dr
+ printhmap("move>>",move)
+ if mob.blocked then
+  if move[4]==1 then
+  	move[4]=0
+  	move[3]=1
+  	mob.flipx=true
+  else
+  	move[4]=1
+  	move[3]=0
+  	mob.flipx=false
+  end
+ end
+ printhmap("move<<",move)
+	return move
+end
+
 function newmob(mx,my,typ)
  mobid+=1
  mob={
@@ -349,10 +315,6 @@ function newmob(mx,my,typ)
 	return mob
 end
 -->8
--- world
--->8
--- enemy
--->8
 -- util
 
 function b2s(bool)
@@ -367,6 +329,39 @@ function printhmap(name,m)
  	i+=1
  end
 end
+-->8
+-- draw/update
+
+function _draw()
+	cls()
+	mapdraw(0, 0, 0, 0, 16, 16)
+
+	local cspr=me.sprs[me.cspr]
+	spr(cspr,me.x,me.y,1,1,me.flipx,false)
+	
+	-- moba
+	for mob in all(mobs) do
+		cspr=mob.sprs[mob.cspr]
+		spr(cspr,mob.x,mob.y,1,1,mob.flipx,false)
+	end
+	
+	-- debug boxes
+	for obj in all(debug) do
+		rect(obj.x1,obj.y1,obj.x2,obj.y2,8)	
+	end
+
+end
+
+--
+-- pico-8 update callback
+--
+function _update()
+	update_player()
+	update_mob()
+	moveall()
+	spawmobs()
+end
+
 __gfx__
 00000000555555550055550000555500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 000000005d55ddd5000d600000000000000000000000000000000000000000000000000000000000000000000000000000000000000040000000000000000000
