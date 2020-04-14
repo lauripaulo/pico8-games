@@ -73,7 +73,7 @@ function update_player()
 	
 		end
 		
-		update_player_map(move)
+		player_map(move)
 		
 	else
 		me.dr=dr_idle
@@ -86,7 +86,7 @@ end
 -- evaluates player collision
 -- with map tiles
 --
-function update_player_map(move)
+function player_map(move)
 	me.dr=move
 	-- colision
 	if map_collide(me,0) then
@@ -103,7 +103,15 @@ function update_player_map(move)
 		me.moving=false
 		me.pxmoved=0
 	else
-		calc_map(me)
+	 local mob=hit_mob(me)
+	 if mob then
+	 	printh("hit!!!!!!!!!!!!!")
+			me.dr=dr_empty
+			me.moving=false
+			me.pxmoved=0
+		else
+			calc_map(me)
+	 end
 	end
 end
 
@@ -221,7 +229,6 @@ function moveall()
 	end
 end
 
-
 function calc_map(ob)
 	ob.moving=true
  ob.mapx+=ob.dr[4]
@@ -250,9 +257,37 @@ function spawmobs()
 	if count(mobs)==0 then
 		mob=newmob(4,10,"ooze")
 		add(mobs,mob)
-		printh("new mob! mapx,mapy="..mob.mapx..","..mob.mapy.." - id:"..mob.id)
 	end
 end
+
+function hit_mob(obj)
+	for mob in all(mobs) do
+		if obj.lm[1]==mob.mapx 
+		and obj.lm[2]==mob.mapy then
+			-- moving to mob
+			mob.dr=dr_idle
+			mob.moving=false
+			mob.pxmoved=0
+			return mob
+		end
+	end
+	return nil
+end
+
+function mob_hit(obj)
+	for mob in all(mobs) do
+		if mob.lm[1]==obj.mapx 
+		and mob.lm[2]==obj.mapy then
+			-- moving to obj
+			mob.dr=dr_idle
+			mob.moving=false
+			mob.pxmoved=0
+			return mob
+		end
+	end
+	return nil
+end
+
 
 function update_mob()
 	for mob in all(mobs) do
@@ -264,19 +299,25 @@ function update_mob()
 				mob.moving=false
 				mob.pxmoved=0
 		 else
-			 mob.blocked=false
-		  mob.moving=true
-		 	calc_map(mob)
+		  if mob_hit(me) then
+		  	printh("mob wins.....");
+					mob.dr=dr_idle
+					mob.moving=false
+					mob.pxmoved=0
+		  else
+				 mob.blocked=false
+			  mob.moving=true
+			 	calc_map(mob)
+			 end
 		 end
 		end
 	end
 end
 
 function think(mob)
- printh("mob blocked:"..b2s(mob.blocked))
  local move=mob.dr
- printhmap("move:",move)
  if mob.blocked then
+	 printh("mob blocked:"..b2s(mob.blocked))
   if move[4]==1 then
   	move[4]=0
   	move[3]=1
