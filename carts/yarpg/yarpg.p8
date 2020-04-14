@@ -11,7 +11,6 @@ me={
 	y=0,
 	mapx=1, -- x in tile map
 	mapy=1, -- y in tile map
-	vl=1, -- velocity
 	tspr=0,
  dr={0,0,0,0},  -- ⬆️⬇️⬅️➡️
 	sprs={52,53,54,55}, -- sprites
@@ -58,18 +57,18 @@ function update_player()
 		
 		if btn(⬆️) then
 			me.flipx=false
-			move[1]=me.vl
+			move[1]=1
 	
 		elseif btn(⬇️) then
 			me.flipx=true
-			move[2]=me.vl
+			move[2]=1
 	
 		elseif btn(⬅️) then
-			move[3]=me.vl
+			move[3]=1
 			me.flipx=true
 	
 		elseif btn(➡️) then
-			move[4]=me.vl
+			move[4]=1
 			me.flipx=false
 	
 		end
@@ -79,9 +78,8 @@ function update_player()
 	else
 		me.dr=dr_idle
 		bpress = false
-		return
 	end
-
+	return bpress
 end
 
 --
@@ -238,7 +236,7 @@ function calc_move(ob)
  ob.x-=ob.dr[3]
  ob.y+=ob.dr[2]
  ob.y-=ob.dr[1]
- ob.pxmoved+=ob.vl
+ ob.pxmoved+=1
  if ob.pxmoved==8 then
  	ob.moving=false
  	ob.pxmoved=0
@@ -262,7 +260,9 @@ function update_mob()
 		 mob.dr=think(mob)
 		 if map_collide(mob,0) then
 		  mob.blocked=true
---		  mob.dr=dr_idle
+				mob.dr=dr_idle
+				mob.moving=false
+				mob.pxmoved=0
 		 else
 			 mob.blocked=false
 		  mob.moving=true
@@ -275,7 +275,7 @@ end
 function think(mob)
  printh("mob blocked:"..b2s(mob.blocked))
  local move=mob.dr
- printhmap("move>>",move)
+ printhmap("move:",move)
  if mob.blocked then
   if move[4]==1 then
   	move[4]=0
@@ -287,7 +287,6 @@ function think(mob)
   	mob.flipx=false
   end
  end
- printhmap("move<<",move)
 	return move
 end
 
@@ -299,7 +298,6 @@ function newmob(mx,my,typ)
 		y=my*8,
 		mapx=mx, -- x in tile map
 		mapy=my, -- y in tile map
-		vl=1, -- velocity
 		tspr=0,
 	 dr={0,0,0,0},  -- ⬆️⬇️⬅️➡️
 		sprs={10,11,12,13}, -- sprites
@@ -356,10 +354,11 @@ end
 -- pico-8 update callback
 --
 function _update()
-	update_player()
-	update_mob()
-	moveall()
 	spawmobs()
+	if update_player() then
+		update_mob()
+	end
+	moveall()
 end
 
 __gfx__
