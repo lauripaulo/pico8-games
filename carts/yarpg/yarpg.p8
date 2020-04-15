@@ -320,17 +320,19 @@ end
 
 function _draw()
 	cls()
-	mapdraw(0, 0, 0, 0, 16, 14)
+	mapdraw(0, 0, 0, 0, 16, 13)
 	
-	spr(5,0,14*8,1,1)
-	spr(5,0,15*8,1,1,false,true)
+	spr(5,0,13*8,1,1)
+	spr(5,0,14*8,1,1,false,true)
 
-	spr(5,15*8,14*8,1,1,true,false)
-	spr(5,15*8,15*8,1,1,true,true)
+	spr(5,15*8,13*8,1,1,true,false)
+	spr(5,15*8,14*8,1,1,true,true)
 	for i= 1,14 do
-			spr(6,i*8,14*8,1,1,false,false)
-			spr(6,i*8,15*8,1,1,false,true)
+			spr(6,i*8,13*8,1,1,false,false)
+			spr(6,i*8,14*8,1,1,false,true)
 	end
+	cursor(5,(13*8)+5)
+	print("map: "..me.mapx..","..me.mapy)
 
 	local cspr=me.sprs[me.cspr]
 	spr(cspr,me.x,me.y,1,1,me.flipx,false)
