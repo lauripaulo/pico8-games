@@ -433,12 +433,13 @@ function printhmap(name,m)
 end
 
 function addmsg(_txt,_secs)
-	local ms={
-		txt=_txt,
-		duration=_secs*60,
-		frames=0
-	}
-	add(msgs,ms)
+	add(msgs,
+		{
+		 txt=_txt,
+			duration=_secs*60,
+			frames=0
+		}
+	)
 end
 -->8
 -- draw/update
@@ -465,15 +466,16 @@ function _draw()
 end
 
 function update_messages()
- for i=1,#msgs do
- 	local ms=msgs[i]
-  printh("update msg:"..i)
+ for ms in all(msgs) do
+  printh("update msg:")
   printh("->txt:"..ms.txt)
   printh("->frames:"..ms.frames)
   printh("->duration:"..ms.duration)
  	if ms.frames == 
  				ms.duration then
+	  printh(">> removed txt:"..ms.txt)
  	 del(msgs,ms)
+ 	 ms=nil
  	else
 	 	ms.frames+=1
 	 end
@@ -484,16 +486,16 @@ function draw_messages()
  if #msgs==0 then 
  	return
  end
- local sz=#msgs
-	local ys=12*8*sz-3
-	local ye=13*8*sz-3
+ local sz=(#msgs-1)*8
+	local ys=12*8-sz-3
+	local ye=13*8-3
 	rectfill(5,ys+1,125,ye+1,0)
 	rectfill(4,ys,124,ye,7)
 
  for i=1,#msgs do
  	local txt=msgs[i].txt
 		color(8)
-		cursor(8,ys+2)
+		cursor(8,ys+2+(i-1)*8)
 		print(txt)
  end
 end
