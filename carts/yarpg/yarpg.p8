@@ -1,65 +1,68 @@
 pico-8 cartridge // http://www.pico-8.com
-version 18
+version 22
 __lua__
 -- global vars
 
-me={
-	name="player",
-	x=0,
-	y=0,
-	mapx=1, -- x in tile map
-	mapy=1, -- y in tile map
-	tomx=1, -- x want to go
-	tomy=1, -- y want to go
-	sprmx=1,
-	sprmy=1,
-	tspr=0,
-	sprs={52,53,54,55}, -- sprites
-	cspr=1,	-- current sprite
-	vspr=.8, -- incr chg sprite
-	flipx=false,
-	moving=false,
-	pxmoved=0,
- keys=0,
- gold=0,
- bpress=false,
- level=1,
- atk=1,
- def=1,
- maxhp=3,
- hp=3
-}
-
-state={
- frames=0,
-	spawmobs=true,
- update_mobs=false,
- resolve_collisions=false,
- moveinmap=false,
- combat=false,
- level=1,
- gameover=false,
- gamestart=true
-}
-
-panel={}
-
--- init player
-me.x=me.mapx*8
-me.y=me.mapy*8
-
--- init mobs
-mobs={}
-mobid=0
-
--- mob vision
-directions={{1,0},{0,-1},{-1,0},{0,1}}
-
--- draw debug table
-debug={}
-
-printh("=-=-=-=-=-=-=")
-
+function _init()
+	me={
+		name="player",
+		x=0,
+		y=0,
+		mapx=1, -- x in tile map
+		mapy=1, -- y in tile map
+		tomx=1, -- x want to go
+		tomy=1, -- y want to go
+		sprmx=1,
+		sprmy=1,
+		tspr=0,
+		sprs={52,53,54,55}, -- sprites
+		cspr=1,	-- current sprite
+		vspr=.8, -- incr chg sprite
+		flipx=false,
+		moving=false,
+		pxmoved=0,
+	 keys=0,
+	 gold=0,
+	 bpress=false,
+	 level=1,
+	 atk=1,
+	 def=1,
+	 maxhp=3,
+	 hp=3
+	}
+	
+	state={
+	 frames=0,
+		spawmobs=true,
+	 update_mobs=false,
+	 resolve_collisions=false,
+	 moveinmap=false,
+	 combat=false,
+	 level=1,
+	 gameover=false,
+	 gamestart=true
+	}
+		
+	-- init player
+	me.x=me.mapx*8
+	me.y=me.mapy*8
+	
+	-- init mobs
+	mobs={}
+	mobid=0
+	
+	directions={
+		{ 1,0},{0,-1},
+		{-1,0},{0, 1}
+	}
+	
+	-- draw debug table
+	debug={}
+	panel={}
+	msgs={}
+	
+	printh("=-=-=-=-=-=-=")
+end
 -->8
 -- player
 
@@ -134,25 +137,27 @@ function eval_playermove()
 end
 
 function found_door(mlx,mly)
-	printh("found a door")
 	local door=mget(mlx,mly)
 	if door==219 then
+		addmsg("found a door",.5)
 	 mset(mlx,mly,220)
 	 sfx(1)
 	elseif me.keys>0 then
 		if door==224 then
+			addmsg("door open!",.5)
 		 me.keys-=1
 		 mset(mlx,mly,225)
 		end
 	 sfx(1)				
 	else 
 	 -- cant open
+		addmsg("door locked!",.5)
 	 sfx(0)
 	end
 end
 
 function found_key(mlx,mly)
-	printh("found a key")
+	addmsg("found key.",.5)
 	local key=mget(mlx,mly)
 	if key==36 then
 		mset(mlx,mly,37)
@@ -165,11 +170,12 @@ function found_key(mlx,mly)
 end
 
 function found_chest(mlx,mly)
-	printh("found a chest!")
 	local chest=mget(mlx,mly)
 	if chest==38 then
 		mset(mlx,mly,39)
-		me.gold+=roll_gold()
+		local gold=roll_gold()
+		me.gold+=gold
+		addmsg("found "..gold.." coins.",.5)
 		sfx(4)
 	else 
 	 -- already looted
@@ -374,10 +380,10 @@ function newmob(mx,my,typ)
  mob={
 		x=mx*8,
 		y=my*8,
-		mapx=mx, -- x in tile map
-		mapy=my, -- y in tile map
-		tomx=mx, -- x want to go
-		tomy=my, -- y want to go
+		mapx=mx,
+		mapy=my,
+		tomx=mx,
+		tomy=my,
 		sprmx=mx,
 		sprmy=my,
 		tspr=0,
@@ -389,21 +395,21 @@ function newmob(mx,my,typ)
 	if typ=="ooze" then
 		mob.sprs={201,202,203}
 		mob.cspr=1
-		mob.vspr=.3
+		mob.vspr=.2
 		mob.name="green ooze"
 		mob.level=3
 		mob.hp=5
 	elseif typ=="zombie" then
 		mob.sprs={204,205,206}
 		mob.cspr=1
-		mob.vspr=.3
+		mob.vspr=.2
 		mob.name="zombie"
 		mob.level=3
 		mob.hp=5
 	else
 		mob.sprs={196,197,198}
 		mob.cspr=1
-		mob.vspr=.3
+		mob.vspr=.2
 		mob.name="skeleton"
 		mob.level=2
 		mob.hp=3
@@ -425,6 +431,15 @@ function printhmap(name,m)
  	i+=1
  end
 end
+
+function addmsg(_txt,_secs)
+	local ms={
+		txt=_txt,
+		duration=_secs*60,
+		frames=0
+	}
+	add(msgs,ms)
+end
 -->8
 -- draw/update
 
@@ -436,6 +451,7 @@ function _update()
  update_mobs()
  moveinmap()
  movesprs()
+	update_messages()
 end
 
 function _draw()
@@ -445,7 +461,41 @@ function _draw()
 	draw_mobs()	
 	draw_debug()
 	draw_info()	
-	draw_combat()	
+	draw_messages()
+end
+
+function update_messages()
+ for i=1,#msgs do
+ 	local ms=msgs[i]
+  printh("update msg:"..i)
+  printh("->txt:"..ms.txt)
+  printh("->frames:"..ms.frames)
+  printh("->duration:"..ms.duration)
+ 	if ms.frames == 
+ 				ms.duration then
+ 	 del(msgs,ms)
+ 	else
+	 	ms.frames+=1
+	 end
+ end
+end
+
+function draw_messages()
+ if #msgs==0 then 
+ 	return
+ end
+ local sz=#msgs
+	local ys=12*8*sz-3
+	local ye=13*8*sz-3
+	rectfill(5,ys+1,125,ye+1,0)
+	rectfill(4,ys,124,ye,7)
+
+ for i=1,#msgs do
+ 	local txt=msgs[i].txt
+		color(8)
+		cursor(8,ys+2)
+		print(txt)
+ end
 end
 
 function draw_map()
@@ -522,9 +572,7 @@ function draw_info()
 
 end
 
-function draw_combat()
-	printh("combat start!")
-end
+
 __gfx__
 00000000555555550000000000000000000000000666666666666666000000000000000000000000000000000000000000000000000000000000000000000000
 000000005d55ddd50000000000000000000000006650000000000000000000000000000000000000000000000000000000000000000000000000000000000000
