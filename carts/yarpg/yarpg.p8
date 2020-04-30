@@ -489,6 +489,10 @@ function draw_messages()
  local sz=(#msgs-1)*8
 	local ys=12*8-sz-3
 	local ye=13*8-3
+ if me.mapy>7 then
+		ys=1
+		ye=11+sz-3
+ end
 	rectfill(5,ys+1,125,ye+1,0)
 	rectfill(4,ys,124,ye,7)
 
