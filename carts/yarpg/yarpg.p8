@@ -1,5 +1,5 @@
 pico-8 cartridge // http://www.pico-8.com
-version 22
+version 23
 __lua__
 -- global vars
 
@@ -25,8 +25,8 @@ function _init()
 	 gold=0,
 	 bpress=false,
 	 level=1,
-	 atk=1,
-	 def=1,
+	 atack=2,
+	 defense=2,
 	 maxhp=3,
 	 hp=3
 	}
@@ -37,7 +37,6 @@ function _init()
 	 update_mobs=false,
 	 resolve_collisions=false,
 	 moveinmap=false,
-	 combat=false,
 	 level=1,
 	 gameover=false,
 	 gamestart=true
@@ -58,6 +57,8 @@ function _init()
 	
 	-- draw debug table
 	debug={}
+	
+	-- events
 	panel={}
 	msgs={}
 	
@@ -124,12 +125,9 @@ function eval_playermove()
 		me.tomy=me.mapy
 	elseif mobhit then
 	 printh("-->mob:"..mob.id)
-	 sfx(5)
 		me.tomx=me.mapx
 		me.tomy=me.mapy
-		-- kill mob
-		del(mobs,mob)
-		state.combat=true
+		attack(me,mob)
 	else
 		-- player steps
 		sfx(2)
@@ -139,25 +137,25 @@ end
 function found_door(mlx,mly)
 	local door=mget(mlx,mly)
 	if door==219 then
-		addmsg("found a door",.5)
+		addmsg("found a door",.5,0)
 	 mset(mlx,mly,220)
 	 sfx(1)
 	elseif me.keys>0 then
 		if door==224 then
-			addmsg("door open!",.5)
+			addmsg("door open!",.5,0)
 		 me.keys-=1
 		 mset(mlx,mly,225)
 		end
 	 sfx(1)				
 	else 
 	 -- cant open
-		addmsg("door locked!",.5)
+		addmsg("door locked!",.5,0)
 	 sfx(0)
 	end
 end
 
 function found_key(mlx,mly)
-	addmsg("found key.",.5)
+	addmsg("found key.",.5,0)
 	local key=mget(mlx,mly)
 	if key==36 then
 		mset(mlx,mly,37)
@@ -175,7 +173,7 @@ function found_chest(mlx,mly)
 		mset(mlx,mly,39)
 		local gold=roll_gold()
 		me.gold+=gold
-		addmsg("found "..gold.." coins.",.5)
+		addmsg("found "..gold.." coins.",.5,11)
 		sfx(4)
 	else 
 	 -- already looted
@@ -277,37 +275,26 @@ function moveinmap()
 	end
 end
 
-function d6(num)
- local value=0
- for i=1,num do
-  value+=flr(rnd(6))+1
- end
- return value
-end
-
-function roll_atk(obj)
- return d6(2)+obj.level+obj.atk
-end
-
-function roll_def(obj)
- return d6(2)+obj.level+obj.def
-end
 -->8
 -- mobs
 
 function update_mobs()
 	if state.update_mobs then
 		for mob in all(mobs) do
-		 mob.tomx=mob.mapx
-		 mob.tomy=mob.mapy
-		 think(mob)
-		 if mob_hit(mob,me) then
-		  mob.tomx=mob.mapx
-		  mob.tomy=mob.mapy
-		  me.hp-=1
-		  state.combat=true
-		  sfx(6)
-		 end
+		 if mob.hp<=0 then
+  		del(mobs,mob)
+			 sfx(5)
+		 else
+			 mob.tomx=mob.mapx
+			 mob.tomy=mob.mapy
+			 think(mob)
+			 if mob_hit(mob,me) then
+			  mob.tomx=mob.mapx
+			  mob.tomy=mob.mapy
+			  attack(mob,me)		  
+			  sfx(6)
+			 end
+			end
 		end
 		state.update_mobs=false
 	end
@@ -397,22 +384,28 @@ function newmob(mx,my,typ)
 		mob.cspr=1
 		mob.vspr=.2
 		mob.name="green ooze"
-		mob.level=3
-		mob.hp=5
+		mob.level=1
+		mob.hp=3
+	 mob.atack=1
+	 mob.defense=2
 	elseif typ=="zombie" then
 		mob.sprs={204,205,206}
 		mob.cspr=1
 		mob.vspr=.2
 		mob.name="zombie"
-		mob.level=3
-		mob.hp=5
+		mob.level=2
+		mob.hp=2
+	 mob.atack=1
+	 mob.defense=3
 	else
 		mob.sprs={196,197,198}
 		mob.cspr=1
 		mob.vspr=.2
 		mob.name="skeleton"
-		mob.level=2
-		mob.hp=3
+		mob.level=1
+		mob.hp=1
+	 mob.atack=1
+	 mob.defense=2
 	end
 	return mob
 end
@@ -432,14 +425,47 @@ function printhmap(name,m)
  end
 end
 
-function addmsg(_txt,_secs)
+function addmsg(_txt,_secs,_colr)
 	add(msgs,
 		{
 		 txt=_txt,
 			duration=_secs*60,
-			frames=0
+			frames=0,
+			colr=_colr
 		}
 	)
+end
+
+function attack(obj,target)
+ local t=1
+	local atk=rollatk(obj)
+	local def=rolldef(target)
+	addmsg(obj.name.." attack:"..atk,t,0)
+	local result=atk-def
+	if result>=0 then
+ 	addmsg(target.name.." defense:"..def.." hit!",t,3)
+		target.hp-=obj.level
+		sfx(6)
+	elseif result<0 then
+ 	addmsg(target.name.." defense:"..def.." miss...",t,8)
+		sfx(7)
+	end
+end
+
+function d6(num)
+ local value=0
+ for i=1,num do
+  value+=flr(rnd(6))+1
+ end
+ return value
+end
+
+function rollatk(obj)
+ return d6(2)+obj.level+obj.atack
+end
+
+function rolldef(obj)
+ return d6(2)+obj.level+obj.defense
 end
 -->8
 -- draw/update
@@ -467,13 +493,8 @@ end
 
 function update_messages()
  for ms in all(msgs) do
-  printh("update msg:")
-  printh("->txt:"..ms.txt)
-  printh("->frames:"..ms.frames)
-  printh("->duration:"..ms.duration)
  	if ms.frames == 
  				ms.duration then
-	  printh(">> removed txt:"..ms.txt)
  	 del(msgs,ms)
  	 ms=nil
  	else
@@ -498,7 +519,8 @@ function draw_messages()
 
  for i=1,#msgs do
  	local txt=msgs[i].txt
-		color(8)
+ 	local colr=msgs[i].colr
+		color(colr)
 		cursor(8,ys+2+(i-1)*8)
 		print(txt)
  end
@@ -562,7 +584,7 @@ function draw_info()
  -- stats
 	color(10)
 	cursor(4,(14*8)+1)
-	print("level:"..me.level.." atk:"..me.atk.." def:"..me.def)
+	print("level:"..me.level.." atk:"..me.atack.." def:"..me.defense)
 
  -- map
 	cursor(1+8*13,(14*8)+1)
@@ -732,4 +754,5 @@ __sfx__
 00080000260503005030030300203002030000106001c6001c600116001670011600126002d700126001360014600156001560000000000000000000000000000000000000000000000000000000000000000000
 000700001c0501f050210302102021010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0002000013670176701b6601e66022650276502b650286502664024640216401f6401c6301a6301762014620126200f6200d620096200961008610056100461003610016100061028600236001f600186000d600
-000300000405009050090300a0300a0200a0100a010090000a0000b00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+000300000406009050090300a0300a0200a0100a010090000a0000b00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+000400000755009540055300552000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
