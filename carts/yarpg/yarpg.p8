@@ -415,12 +415,11 @@ function printhmap(name,m)
  end
 end
 
-function addhit(ob)
- printh("addhit:"..ob.name.." x:"..ob.x.." y:"..ob.y)
+function addhit(_ob)
+ printh("addhit:".._ob.name.." x:".._ob.x.." y:".._ob.y)
  add(hits,
  	{
- 		x=ob.x,
- 		y=ob.y,
+ 		ob=_ob,
  		cspr=1, -- none
  		dur=0
  	}
@@ -488,10 +487,10 @@ function _draw()
 	draw_map()
  draw_player()
 	draw_mobs()	
+	draw_hits()
 	draw_debug()
 	draw_info()	
 	draw_messages()
-	draw_hits()
  state.frames+=1
 end
 
@@ -499,7 +498,7 @@ function update_hits()
 	for h in all(hits) do
 	 if h.dur>4 then
 	 	del(hits,h)
-	 	printh("remove hit x:"..h.x.." y:"..h.y)
+	 	printh("remove hit x:"..h.ob.x.." y:"..h.ob.y)
 	 else
 	  if (state.frames%2)==0 then
 				h.cspr+=1
@@ -507,7 +506,7 @@ function update_hits()
 				if h.cspr>4 then
 					h.cspr=1
 				end
-		 	printh("hit x:"..h.x.." y:"..h.y.." cspr:"..h.cspr.." dur:"..h.dur)
+		 	printh("hit x:"..h.ob.x.." y:"..h.ob.y.." cspr:"..h.cspr.." dur:"..h.dur)
 		 	printh(" spr:"..hspr[h.cspr])
 		 end
 		end
@@ -516,7 +515,7 @@ end
 
 function draw_hits()
 	for h in all(hits) do
-		spr(hspr[h.cspr],h.x,h.y,1,1)
+		spr(hspr[h.cspr],h.ob.x,h.ob.y,1,1)
  	printh(" draw spr:"..hspr[h.cspr])
 	end
 end
