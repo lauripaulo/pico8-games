@@ -14,6 +14,12 @@ function menu_init()
 	starprs=false
 end
 
+function gameover_init()
+	_draw = gameover_draw
+	_update = gameover_update
+	mdelay=60
+end
+
 function game_init()
 	-- state machine
 	_init = game_init
@@ -499,6 +505,14 @@ function menu_update()
  end
 end
 
+function gameover_update()
+ if mdelay==0 then
+ 	menu_init()
+ else
+  mdelay-=1
+ end
+end
+
 function game_update()
 	if me.hp>0 or #hits>0
 	then
@@ -510,6 +524,8 @@ function game_update()
 	 movesprs()
 		update_messages()
 		update_hits()
+	else
+	 gameover_init()
 	end
 end
 
@@ -566,24 +582,24 @@ function menu_draw()
  print("press ❎ to start")	
 end
 
+function gameover_draw()
+	cls()
+	cursor(64-((11*4)/2),54)
+	print("you died...",10)
+	cursor(64-((11*4)/2),70)
+	print(" game over ",10)
+end
+
 function game_draw()
 	cls()
  state.frames+=1
-	if me.hp>0 or #hits>0
-	then
-		draw_map()
-	 draw_player()
-		draw_mobs()	
-		draw_hits()
-		--draw_debug()
-		draw_info()	
-		draw_messages()
-	else
-		cursor(64-((11*4)/2),54)
-		print("you died...",10)
-		cursor(64-((11*4)/2),70)
-		print(" game over ",10)
-	end
+	draw_map()
+ draw_player()
+	draw_mobs()	
+	draw_hits()
+	--draw_debug()
+	draw_info()	
+	draw_messages()
 end
 
 function draw_hits()
