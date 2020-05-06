@@ -501,6 +501,7 @@ function menu_update()
   mdelay-=1
  end 
  if mdelay==0 then
+	 startprs=false
   game_init()
  end
 end
@@ -584,9 +585,11 @@ end
 
 function gameover_draw()
 	cls()
-	cursor(64-((11*4)/2),54)
-	print("you died...",10)
-	cursor(64-((11*4)/2),70)
+	color(8)
+	cursor(42,54)
+	print(" you died!",10)
+	color(10)
+	cursor(42,70)
 	print(" game over ",10)
 end
 
