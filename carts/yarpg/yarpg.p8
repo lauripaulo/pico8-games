@@ -42,25 +42,25 @@ function game_init()
 		flipx=false,
 		moving=false,
 		pxmoved=0,
-	 keys=0,
-	 gold=0,
-	 bpress=false,
-	 level=1,
-	 atack=2,
-	 defense=2,
-	 maxhp=3,
-	 hp=3
+		keys=0,
+		gold=0,
+		bpress=false,
+		level=1,
+		atack=2,
+		defense=2,
+		maxhp=3,
+		hp=3
 	}
 	
 	state={
-	 frames=0,
+		frames=0,
 		spawmobs=true,
-	 update_mobs=false,
-	 resolve_collisions=false,
-	 moveinmap=false,
-	 level=1,
-	 gameover=false,
-	 gamestart=true
+		update_mobs=false,
+		resolve_collisions=false,
+		moveinmap=false,
+		level=1,
+		gameover=false,
+		gamestart=true
 	}
 		
 	-- init player
@@ -82,9 +82,11 @@ function game_init()
 	-- events
 	panel={}
 	msgs={}
- hits={}	
- dspr={11,12,13,14}
- hspr={27,28,29,30}
+	hits={}
+	flts={}
+	still={}
+	dspr={11,12,13,14}
+	hspr={27,28,29,30}
 	printh("=-=-=-=-=-=-=")
 end
 -->8
@@ -101,9 +103,9 @@ function update_player()
 		or btn(➡️) then
 		me.bpress = true
 		
-	 state.update_mobs=true
-	 state.resolve_collisions=true
-	 state.moveinmap=true
+		state.update_mobs=true
+		state.resolve_collisions=true
+		state.moveinmap=true
 		
 		if btn(⬆️) then
 			me.flipx=false
@@ -131,9 +133,8 @@ end
 -- with map tiles
 --
 function eval_playermove()
- local mobhit,mob=hit_mob(me)
- 
-	if map_collide(me,0) then
+	local mobhit,mob=hit_mob(me)
+		if map_collide(me,0) then
 		if map_collide(me,1) then
 			found_door(me.tomx,me.tomy)
 		elseif map_collide(me,2) then
@@ -159,19 +160,19 @@ function found_door(mlx,mly)
 	local door=mget(mlx,mly)
 	if door==219 then
 		addmsg("found a door",.5,0)
-	 mset(mlx,mly,220)
-	 sfx(1)
+		mset(mlx,mly,220)
+		sfx(1)
 	elseif me.keys>0 then
 		if door==224 then
 			addmsg("door open!",.5,0)
-		 me.keys-=1
-		 mset(mlx,mly,225)
+			me.keys-=1
+			mset(mlx,mly,225)
 		end
-	 sfx(1)				
+		sfx(1)				
 	else 
-	 -- cant open
+		-- cant open
 		addmsg("door locked!",.5,0)
-	 sfx(0)
+		sfx(0)
 	end
 end
 
@@ -183,8 +184,8 @@ function found_key(mlx,mly)
 		me.keys+=1
 		sfx(3)
 	else
-	 -- cant do anything
-	 sfx(0)
+		-- cant do anything
+		sfx(0)
 	end
 end
 
@@ -197,13 +198,13 @@ function found_chest(mlx,mly)
 		addmsg("found "..gold.." coins.",.5,11)
 		sfx(4)
 	else 
-	 -- already looted
-	 sfx(0)
+		-- already looted
+		sfx(0)
 	end
 end
 
 function roll_gold()
- return me.level*d6(2)
+	return me.level*d6(2)
 end
 -->8
 -- common
@@ -226,7 +227,6 @@ end
 function map_collide(obj, flag)
 	-- moving to tile x,y ...
 	local x1,y1=obj.tomx,obj.tomy	
-
 	--debug
 	xy={x1=x1*8,y1=y1*8,x2=x1*8+7,y2=y1*8+7}
 	add(debug,xy)
@@ -241,7 +241,7 @@ function movesprs()
 		anispr(me)
 		for mob in all(mobs) do
 			calc_move(mob)
-		 anispr(mob)
+			anispr(mob)
 		end
 	end
 end
@@ -253,29 +253,29 @@ function calc_map(ob)
 end
 
 function calc_move(ob) 
- if ob.sprmx<ob.mapx then
- 	ob.x+=1
- elseif ob.sprmx>ob.mapx then
-  ob.x-=1
- end
- if ob.sprmy<ob.mapy then
- 	ob.y+=1
- elseif ob.sprmy>ob.mapy then
-  ob.y-=1
- end
- ob.pxmoved+=1
- if ob.pxmoved==8 then
- 	ob.moving=false
- 	ob.pxmoved=0
+	if ob.sprmx<ob.mapx then
+		ob.x+=1
+	elseif ob.sprmx>ob.mapx then
+		ob.x-=1
+	end
+	if ob.sprmy<ob.mapy then
+		ob.y+=1
+		elseif ob.sprmy>ob.mapy then
+		ob.y-=1
+	end
+	ob.pxmoved+=1
+	if ob.pxmoved==8 then
+		ob.moving=false
+		ob.pxmoved=0
 		debug={}
-	 state.update_mobs=false
-	 state.resolve_collisions=false
-	 state.moveinmap=false
- end
+		state.update_mobs=false
+		state.resolve_collisions=false
+		state.moveinmap=false
+	end
 end
 
 function resolve_collisions()
- if state.resolve_collisions then
+	if state.resolve_collisions then
 		eval_playermove()
 		state.resolve_collisions=false
 	end
@@ -283,13 +283,13 @@ end
 
 function moveinmap()
 	if state.moveinmap then
-	 -- update screen x,y
-	 me.sprmx=me.x/8 -- map loc.
-	 me.sprmy=me.y/8 -- map loc.
+		-- update screen x,y
+		me.sprmx=me.x/8 -- map loc.
+		me.sprmy=me.y/8 -- map loc.
 		calc_map(me)
 		for mob in all(mobs) do
-		 mob.sprmx=mob.x/8 -- map loc.
-		 mob.sprmy=mob.y/8 -- map loc.
+			mob.sprmx=mob.x/8 -- map loc.
+			mob.sprmy=mob.y/8 -- map loc.
 			calc_map(mob)
 		end
 		state.moveinmap=false
@@ -301,30 +301,30 @@ function b2s(bool)
 end
 
 function printhmap(name,m)
- local i=1
- printh("name:"..name)
- for value in all(m) do
- 	printh("->map["..i.."]="..value)
- 	i+=1
- end
+	local i=1
+	printh("name:"..name)
+	for value in all(m) do
+		printh("->map["..i.."]="..value)
+		i+=1
+	end
 end
 
 function addhit(_ob,_sprs)
- printh("addhit:".._ob.name.." x:".._ob.x.." y:".._ob.y)
- add(hits,
- 	{
- 		ob=_ob,
- 		cspr=1, -- none
- 		dur=0,
- 		sprs=_sprs
- 	}
- )
+	printh("addhit:".._ob.name.." x:".._ob.x.." y:".._ob.y)
+	add(hits,
+		{
+			ob=_ob,
+			cspr=1, -- none
+			dur=0,
+			sprs=_sprs
+		}
+	)
 end
 
 function addmsg(_txt,_secs,_colr)
 	add(msgs,
 		{
-		 txt=_txt,
+			txt=_txt,
 			duration=_secs*60,
 			frames=0,
 			colr=_colr
@@ -332,41 +332,70 @@ function addmsg(_txt,_secs,_colr)
 	)
 end
 
+function addflt(obj,_txt,_colr)
+	add(flts,
+		{
+			txt=_txt,
+			frames=0,
+			colr=_colr,
+			tgr=obj.y-10,
+			x=obj.x,
+			y=obj.y
+		}
+	)
+end
+
+function addstill(_x,_y,_sprn)
+	add(still,
+			{
+				x=_x,
+				y=_y,
+				sprn=_sprn
+			}
+	)
+end
+
 function attack(obj,target)
- local t=1
+	local t=1
 	local atk=rollatk(obj)
 	local def=rolldef(target)
 	local result=atk-def
 	if result>=0 then
- 	addmsg("hit "..target.name.." for "..obj.level.." damage",t,3)
+		local colr=10
+		if target==me then 
+			colr=8
+		end
+		addflt(target,"-"..obj.level,colr)
+		addmsg("hit "..target.name.." for "..obj.level.." damage",t,3)
 		target.hp-=obj.level
 		if target.hp<=0 then
 			sfx(6)
 			addhit(target,dspr)
+			addstill(target.x,target.y,44)
 		else
 			sfx(5)
 			addhit(target,hspr)
 		end
 	elseif result<0 then
- 	addmsg(obj.name.." attack miss",t,8)
- 	sfx(7)
+		addmsg(obj.name.." attack miss",t,8)
+		sfx(7)
 	end
 end
 
 function d6(num)
- local value=0
- for i=1,num do
-  value+=flr(rnd(6))+1
- end
- return value
+	local value=0
+	for i=1,num do
+		value+=flr(rnd(6))+1
+	end
+	return value
 end
 
 function rollatk(obj)
- return d6(2)+obj.level+obj.atack
+	return d6(2)+obj.level+obj.atack
 end
 
 function rolldef(obj)
- return d6(2)+obj.level+obj.defense
+	return d6(2)+obj.level+obj.defense
 end
 -->8
 -- mobs
@@ -374,17 +403,17 @@ end
 function update_mobs()
 	if state.update_mobs then
 		for mob in all(mobs) do
-		 if mob.hp<=0 then
-  		del(mobs,mob)
-		 else
-			 mob.tomx=mob.mapx
-			 mob.tomy=mob.mapy
-			 think(mob)
-			 if mob_hit(mob,me) then
-			  mob.tomx=mob.mapx
-			  mob.tomy=mob.mapy
-			  attack(mob,me)
-			 end
+			if mob.hp<=0 then
+				del(mobs,mob)
+			else
+				mob.tomx=mob.mapx
+				mob.tomy=mob.mapy
+				think(mob)
+				if mob_hit(mob,me) then
+					mob.tomx=mob.mapx
+					mob.tomy=mob.mapy
+					attack(mob,me)
+				end
 			end
 		end
 		state.update_mobs=false
@@ -407,7 +436,7 @@ function hit_mob(obj)
 	for mob in all(mobs) do
 		if mob.mapx==obj.tomx then
 			if mob.mapy==obj.tomy then
-			 return true,mob
+				return true,mob
 			end
 		end
 	end
@@ -417,7 +446,7 @@ end
 function mob_hit(mob,obj)
 	if mob.tomx==obj.tomx then
 		if mob.tomy==obj.tomy then
-		 return true
+			return true
 		end
 	end
 	return false
@@ -443,8 +472,8 @@ function think(mob)
 end
 
 function newmob(mx,my,typ)
- mobid+=1
- mob={
+	mobid+=1
+	mob={
 		x=mx*8,
 		y=my*8,
 		mapx=mx,
@@ -457,7 +486,7 @@ function newmob(mx,my,typ)
 		flipx=false,
 		moving=false,
 		pxmoved=0,
-	 id=mobid
+		id=mobid
 	}
 	if typ=="ooze" then
 		mob.sprs={201,202,203}
@@ -466,8 +495,8 @@ function newmob(mx,my,typ)
 		mob.name="green ooze"
 		mob.level=1
 		mob.hp=3
-	 mob.atack=1
-	 mob.defense=2
+		mob.atack=1
+		mob.defense=2
 	elseif typ=="zombie" then
 		mob.sprs={204,205,206}
 		mob.cspr=1
@@ -475,8 +504,8 @@ function newmob(mx,my,typ)
 		mob.name="zombie"
 		mob.level=2
 		mob.hp=2
-	 mob.atack=1
-	 mob.defense=3
+		mob.atack=1
+		mob.defense=3
 	else
 		mob.sprs={196,197,198}
 		mob.cspr=1
@@ -484,8 +513,8 @@ function newmob(mx,my,typ)
 		mob.name="skeleton"
 		mob.level=1
 		mob.hp=1
-	 mob.atack=1
-	 mob.defense=2
+		mob.atack=1
+		mob.defense=2
 	end
 	return mob
 end
@@ -493,49 +522,51 @@ end
 -- update
 
 function menu_update()
- if btn(❎) then
-  startprs=true
-  sfx(3)
- end
- if startprs then
-  mdelay-=1
- end 
- if mdelay==0 then
-	 startprs=false
-  game_init()
- end
+	if btn(❎) then
+		startprs=true
+		sfx(3)
+	end
+	if startprs then
+		mdelay-=1
+	end 
+if mdelay==0 then
+		startprs=false
+		game_init()
+	end
 end
 
 function gameover_update()
- if mdelay==0 then
- 	menu_init()
- else
-  mdelay-=1
- end
+	if mdelay==0 then
+		menu_init()
+	else
+		mdelay-=1
+	end
 end
 
 function game_update()
-	if me.hp>0 or #hits>0
+	if me.hp>0 or #hits>0 
+	or #flts>0 or #msgs>0
 	then
 		spawmobs()
-	 update_player()
-	 resolve_collisions()
-	 update_mobs()
-	 moveinmap()
-	 movesprs()
+		update_player()
+		resolve_collisions()
+		update_mobs()
+		moveinmap()
+		movesprs()
 		update_messages()
 		update_hits()
+		update_flts()
 	else
-	 gameover_init()
+		gameover_init()
 	end
 end
 
 function update_hits()
 	for h in all(hits) do
-	 if h.dur>4 then
-	 	del(hits,h)
-	 else
-	  if (state.frames%2)==0 then
+		if h.dur>4 then
+			del(hits,h)
+		else
+		if (state.frames%2)==0 then
 				h.cspr+=1
 				h.dur+=1
 				if h.cspr>4 then
@@ -547,15 +578,27 @@ function update_hits()
 end
 
 function update_messages()
- for ms in all(msgs) do
- 	if ms.frames == 
- 				ms.duration then
- 	 del(msgs,ms)
- 	 ms=nil
- 	else
-	 	ms.frames+=1
-	 end
- end
+	for ms in all(msgs) do
+		if ms.frames == 
+					ms.duration then
+			del(msgs,ms)
+			ms=nil
+		else
+			ms.frames+=1
+		end
+	end
+end
+
+function update_flts()
+	for fl in all(flts) do
+		if fl.frames==50 then
+			del(flts,fl)
+			fl=nil
+		else
+			fl.frames+=1
+			fl.y-=(fl.y-fl.tgr)/10
+		end
+	end
 end
 
 
@@ -563,24 +606,24 @@ end
 -- draw
 
 function menu_draw()
- cls()
- for i=1,5 do
- 	spr(130+i,10*(i-1)+39,45,1,1)
- 	spr(146+i,8*(i-1)+39,55,1,1)
- end
- spr(147,8*5+39,55,1,1)
- if startprs then
-	 local cl=mdelay%5
-	 if cl==0 then 
-	 	color(8)
-	 else 
-	 	color(9) 
-	 end
-	else
-	 color(9)
+	cls()
+	for i=1,5 do
+		spr(130+i,10*(i-1)+39,45,1,1)
+		spr(146+i,8*(i-1)+39,55,1,1)
 	end
- cursor(32,70)
- print("press ❎ to start")	
+	spr(147,8*5+39,55,1,1)
+	if startprs then
+		local cl=mdelay%5
+		if cl==0 then 
+			color(8)
+		else 
+			color(9) 
+		end
+	else
+		color(9)
+	end
+	cursor(32,70)
+	print("press ❎ to start")	
 end
 
 function gameover_draw()
@@ -595,11 +638,13 @@ end
 
 function game_draw()
 	cls()
- state.frames+=1
+	state.frames+=1
 	draw_map()
- draw_player()
+	draw_still()
+	draw_player()
 	draw_mobs()	
 	draw_hits()
+	draw_flts()
 	--draw_debug()
 	camera()
 	draw_info()	
@@ -612,34 +657,46 @@ function draw_hits()
 	end
 end
 
+function draw_still()
+	for h in all(still) do
+		spr(h.sprn,h.x,h.y)
+	end
+end
+
+function draw_flts()
+	for fl in all(flts) do
+		printo(fl.txt,fl.x+2,fl.y,fl.colr)
+	end
+end
+
 function draw_messages()
- if #msgs==0 then 
- 	return
- end
- local sz=(#msgs-1)*8
+	if #msgs==0 then 
+		return
+	end
+	local sz=(#msgs-1)*8
 	local ys=13*8-sz-3
 	local ye=14*8-3
- if me.mapy>7 then
+	if me.mapy>7 then
 		ys=1
 		ye=11+sz-3
- end
+	end
 	rectfill(5,ys+1,125,ye+1,0)
 	rectfill(4,ys,124,ye,7)
-
- for i=1,#msgs do
- 	local txt=msgs[i].txt
- 	local colr=msgs[i].colr
+	
+	for i=1,#msgs do
+		local txt=msgs[i].txt
+		local colr=msgs[i].colr
 		color(colr)
 		cursor(8,ys+2+(i-1)*8)
 		print(txt)
- end
+	end
 end
 
 function draw_map()
- local roomx=flr(me.mapx/16)
- local roomy=flr(me.mapy/14)
- local mappx=(16*roomx)*8
- local mappy=(13*roomy)*8
+	local roomx=flr(me.mapx/16)
+	local roomy=flr(me.mapy/14)
+	local mappx=(16*roomx)*8
+	local mappy=(13*roomy)*8
 -- print ("roomx:"..roomx.."/roomy:"..roomy)
 -- print ("mappx:"..mappx.."/mappy:"..mappy)
 	camera(mappx,mappy,0,0,4,4,0) 
@@ -696,10 +753,10 @@ function draw_info()
 	-- hit points
 	print("life: ",4,(14*8)+2,10)
 	for l=1,me.maxhp do
-	 if l<=me.hp then
-	 	color(8)	
+		if l<=me.hp then
+			color(8)	
 		else
-	 	color(6)	
+			color(6)	
 		end
 		print("♥",16+l*8,(14*8)+2)
 	end
@@ -720,7 +777,13 @@ function draw_info()
 	end
 end
 
-
+function printo(txt,x,y,colr)
+	for i=1,3 do
+		print(txt,(x+(i-2)),y,0)
+		print(txt,x,(y+(i-2)),0)
+	end
+	print(txt,x,y,colr)
+end
 __gfx__
 00000000555555550000000000000000000000005666666666666666000070000000000000000000000000000000000000000000088800008000800000000000
 000000005d55ddd50000000000000000000000006655555555555555000760000000000000000000000000000000000000800000800080000080089000000000
@@ -738,14 +801,14 @@ __gfx__
 000000005dd555d50000000000000000000000000000000000000000000000000000000000000000000000000000000007000000000067600000076000000000
 000000005d555dd50000000000000000000000000000000000000000000000000000000000000000000000000000000000700000000006700000067600000000
 00000000555555550000000000000000000000000000000000000000000000000000000000000000000000000000000000070000000600000000006700000000
-00000000555555550000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-000000005d5d55d50000000000000000000000000000000000000000099999900000000000000000000000000000000000000000000000000000000000000000
-000000005d5dd5d5000000000000000000000aa00000000009444490055555500000000000000000000000000000000000000000000000000000000000000000
-000000005555555500000000000000000aaaaa900000000009999990055555500000000000000000000000000000000000000000000000000000000000000000
-000000005dd5d5d500000000000000000a0a0aa00000000009466490094664900000000000000000000000000000000000000000000000000000000000000000
-000000005555d5550000000000000000000000000000000009444490094444900000000000000000000000000000000000000000000000000000000000000000
-000000005d5dd5d50000000000000000044444400444444009944990099449900000000000000000000000000000000000000000000000000000000000000000
-00000000555555550000000000000000045445400454454000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000555555550000000000000000000000000000000000000000000000000000000000000000000000000088000800bb000b000000000000000000000000
+000000005d5d55d500000000000000000000000000000000000000000999999000000000000000000000000000700087007000b7000000000000000000000000
+000000005d5dd5d5000000000000000000000aa000000000094444900555555000000000000000000000000080088080b00880b0000000000000000000000000
+000000005555555500000000000000000aaaaa900000000009999990055555500000000000000000000000008089880800b8880b000000000000000000000000
+000000005dd5d5d500000000000000000a0a0aa000000000094664900946649000000000000000000000000080788800b08878b0000000000000000000000000
+000000005555d5550000000000000000000000000000000009444490094444900000000000000000000000000708800007088b70000000000000000000000000
+000000005d5dd5d500000000000000000444444004444440099449900994499000000000000000000000000080007080b0007000000000000000000000000000
+0000000055555555000000000000000004544540045445400000000000000000000000000000000000000000080808800b0b0b07000000000000000000000000
 00000000000000000000000000222000002220000022200000222000002220000000000000777000000000000000000000000000000000000000000000000000
 000000000000000000000000022aaa00022aaa00022aaa00022aaa00022aaa00002220000777770000000000000060000000000000aaa0000000600000000000
 000000000000000000000000008afc00008afc00008afc00008afc00008afc00022aaa000077770000000000000760000000a00000a0a0000007600000000000
