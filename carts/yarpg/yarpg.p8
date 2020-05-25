@@ -113,6 +113,7 @@ function update_player()
 		if btn(⬆️) then
 			me.flipx=false
 			me.tomy-=1
+			findpath(me.mapx,me.mapy,7,7,20)
 		elseif btn(⬇️) then
 			me.flipx=true
 			me.tomy+=1
@@ -127,7 +128,7 @@ function update_player()
 	else
 		me.bpress = false
 	end
-	
+		
 	return bpress
 end
 
@@ -138,15 +139,15 @@ end
 function eval_playermove()
 	local mobhit,mob=hit_mob(me)
 		if map_collide(me,0) then
-		if map_collide(me,1) then
-			found_door(me.tomx,me.tomy)
-		elseif map_collide(me,2) then
-			found_key(me.tomx,me.tomy)
-		elseif map_collide(me,3) then
-			found_chest(me.tomx,me.tomy)
-		else
-			sfx(0)
-		end
+			if map_collide(me,1) then
+				found_door(me.tomx,me.tomy)
+			elseif map_collide(me,2) then
+				found_key(me.tomx,me.tomy)
+			elseif map_collide(me,3) then
+				found_chest(me.tomx,me.tomy)
+			else
+				sfx(0)
+			end
 		me.tomx=me.mapx
 		me.tomy=me.mapy
 	elseif mobhit then
@@ -417,76 +418,50 @@ end
 -- ob: source obj
 -- tg: target obj
 -- depth: how deep to search
-function findpath(ob,tg,depth)
-	local found=nil
-	local visited={}
-	local numcells=0
-	local cr=nil
-	-- same location
-	if ob.mapx!=tg.mapx 
-	and ob.mapy!=tg.mapy 
-	then
-		-- initial cell
-		push(
-			pathstk,
-			newcell(ob.mapx,ob.mapy,nil)
-		)
-		printh(ob.name.." path:")
-		while found==nil or numcells<=depth do
-			cr=pop(pathstk)
-			if (cr==nill) break
-			add(visited,cr)
-			printh("->pop cr.x="..cr.x.."/cr.y="..cr.y.."/numcells="..numcells)
-			--
-			add(
-				debug,
-				{x1=cr.x*8,y1=cr.y*8,x2=cr.x*8+7,y2=cr.y*8+7}
+function findpath(ox,oy,tx,ty,depth)
+	printh("findpath("..ox..","..oy..","..tx..","..ty..","..depth..")")
+	local vist=0
+	local minfo={}
+	local cells,cur,fnd=0,nil,false
+	local start=newcell(ox,oy,nil)
+	equeue(minfo,start)
+	repeat
+		vist+=1
+		cur=dqueue(minfo)
+		printh("->inspect cur: ("..cur.x..","..cur.y..") - visit: "..vist)
+		fnd=cur.x==tx and cur.y==ty
+		if fnd then
+			printh("->found! cur==tg")
+			break
+		end
+		cells=mvcells(cur.x,cur.y)
+		printh("->found #"..#cells.." cells")
+		for pm in all(cells) do
+			local nc=newcell(
+				pm.x,pm.y,curr
 			)
-			--
-			local mx,my,flg=0,0,0
-			for ds in all(directions) do
-				-- adjacent cells
-				mx=cr.x+ds[1]
-				my=cr.y+ds[2]
-				printh("direction:("..ds[1]..","..ds[2]..")")
-				local ncl=newcell(mx,my,cr)
-				-- cell visted?
-				if not findtbl(visited,ncl) then
-					printh("->not visited.")
-					-- can move?
-					flg=fget(mget(mx,my),1)
-					print("->flg:"..b2s(flg))
-					if flg then
-						-- yes, can move!
-						printh("->can move.")
-						numcells+=1
-						if tg.mapx==mx 
-						and tg.mapy==my then
-							--found target!
-							found=ncl
-							break
-						end
-							push(
-								pathstk,
-								ncl
-							)
-					end
-				end
-			end
+			equeue(minfo,nc)
+			print("->add to minfo")
+		end
+		print("->minfo #="..#minfo)
+	until vist<=depth
+	printh("->search ends.")
+end
+
+function mvcells(mx,my)
+	printh("getmovcells("..mx..","..my..")")
+	local cells={}
+	for ds in all(directions) do
+		local xx=ds[1]+mx
+		local yy=ds[2]+my
+		printh("->cell ("..xx..","..yy..")")
+		if fget(mget(xx,yy),0) then
+			add(cells,{x=xx,y=yy})
+			printh("->can move to ("..xx..","..yy..")")
 		end
 	end
-	if (found==nil) return nil
-	local path={}
-	while cr!=nill do
-		printh("->path step mapx:"..cr.x.."/mapy:"..cr.y)
-		add(path,
-			{
-				mx=cr.x,
-				my=cr.y
-			})
-		cr=cr.from
-	end
-	return path
+	printh("end mvcells()") 
+	return cells
 end
 
 -->8
@@ -548,7 +523,6 @@ function mob_hit(mob,obj)
 end
 
 function think(mob)
-	findpath(mob,me)
 	for ds in all(directions) do
 		mob.tomx=ds[1]+mob.mapx
 		mob.tomy=ds[2]+mob.mapy
@@ -902,9 +876,9 @@ function pop_discard(stack)
 end
 
 -- fifo
-enqueue=add
+equeue=add
 
-function dequeue(queue)
+function dqueue(queue)
     local v = queue[1]
     del(queue, v)
     return v
