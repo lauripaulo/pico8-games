@@ -419,13 +419,14 @@ end
 -- tg: target obj
 -- depth: how deep to search
 function findpath(ox,oy,tx,ty,depth)
+	printh()
 	printh("findpath("..ox..","..oy..","..tx..","..ty..","..depth..")")
 	local vist=0
 	local minfo={}
 	local cells,cur,fnd=0,nil,false
 	local start=newcell(ox,oy,nil)
 	equeue(minfo,start)
-	repeat
+	while vist<=depth do
 		vist+=1
 		cur=dqueue(minfo)
 		printh("->inspect cur: ("..cur.x..","..cur.y..") - visit: "..vist)
@@ -434,34 +435,43 @@ function findpath(ox,oy,tx,ty,depth)
 			printh("->found! cur==tg")
 			break
 		end
-		cells=mvcells(cur.x,cur.y)
-		printh("->found #"..#cells.." cells")
-		for pm in all(cells) do
+		local cs=mvcells(cur.x,cur.y)
+		printh("->found #"..#cs.." cells")
+		for p in all(cs) do
 			local nc=newcell(
-				pm.x,pm.y,curr
+				p.x,p.y,curr
 			)
 			equeue(minfo,nc)
-			print("->add to minfo")
+			printh("added to m info->p.x:"..p.x.." p.y:"..p.y)
 		end
-		print("->minfo #="..#minfo)
-	until vist<=depth
+		printh("->minfo #="..#minfo)
+	end
 	printh("->search ends.")
+	local path={} 
+	local i=0
+	while curr do
+		printh(">>step:"..i.." ("..curr.x..","..curr.y..")")
+		curr=curr.from
+		i+=1
+	end
 end
 
 function mvcells(mx,my)
 	printh("getmovcells("..mx..","..my..")")
-	local cells={}
+	local cs={}
 	for ds in all(directions) do
 		local xx=ds[1]+mx
 		local yy=ds[2]+my
 		printh("->cell ("..xx..","..yy..")")
-		if fget(mget(xx,yy),0) then
-			add(cells,{x=xx,y=yy})
-			printh("->can move to ("..xx..","..yy..")")
+		if xx>0 and yy>0 then
+			if not fget(mget(xx,yy),0) then
+				add(cs,{x=xx,y=yy})
+				printh("->can move to ("..xx..","..yy..")")
+			end
 		end
 	end
 	printh("end mvcells()") 
-	return cells
+	return cs
 end
 
 -->8
