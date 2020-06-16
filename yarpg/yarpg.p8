@@ -479,20 +479,20 @@ end
 -- draws a sprite to the screen with an outline of the specified colour
 --
 function otspr(n,col_outline,x,y,w,h,flip_x,flip_y)
-  -- reset palette to black
-  for c=1,15 do
-    pal(c,col_outline)
-  end
-  -- draw outline
-  for xx=-1,1 do
-    for yy=-1,1 do
-      spr(n,x+xx,y+yy,w,h,flip_x,flip_y)
-    end
-  end
-  -- reset palette
-  pal()
-  -- draw final sprite
-  spr(n,x,y,w,h,flip_x,flip_y)	
+	-- reset palette to black
+	for c=1,15 do
+		pal(c,col_outline)
+	end
+	-- draw outline
+	for xx=-1,1 do
+		for yy=-1,1 do
+			spr(n,x+xx,y+yy,w,h,flip_x,flip_y)
+		end
+	end
+	-- reset palette
+	pal()
+	-- draw final sprite
+	spr(n,x,y,w,h,flip_x,flip_y)	
 end
 -->8
 -- mobs
@@ -896,22 +896,22 @@ end
 push=add
 
 function pop(stack)
-    local v = stack[#stack]
-    stack[#stack]=nil
-    return v
+	local v = stack[#stack]
+	stack[#stack]=nil
+	return v
 end
 
 function pop_discard(stack)
-    stack[#stack]=nil
+	stack[#stack]=nil
 end
 
 -- fifo
 equeue=add
 
 function dqueue(queue)
-    local v = queue[1]
-    del(queue, v)
-    return v
+	local v = queue[1]
+	del(queue, v)
+	return v
 end
 
 function findtbl(tbl,ob)
