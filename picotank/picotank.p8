@@ -3,90 +3,127 @@ version 29
 __lua__
 -- init
 
-	-- map pico calls to funcs
---	_draw = main_draw
---	_update = main_update
---	_init =	game_init
-
-
 function _init()
 	-- constants
-	left=0
-	right=1
-	up=2
-	down=3
-	
-	-- game config
-	cfg={
---		redexspr={55,56,57,58}, -- red explosion
---	 bluexspr={60,61,62,63}, -- blue explosion
---		score=0,
---		gravity=0.2,
---		maxgravity=5,
---		chopspr={4,5}, -- chopper
---		jetspr={7,8}, -- jet	
---		bulletspr={17,18}, -- bullet
-		levels={},
-		lvl_ypos=15*8,
-		terrspr={48,49,50}
+	left = 0
+	right = 1
+	up = 2
+	down = 3
+	tics = 0
+
+	cfg = {
+		levels = {},
+		lvl_ypos = 15 * 8,
+		playspr = {1, 2},
+		terrspr = {48, 49, 50},
+		shotspr = {17, 18},
+		shot_timer = 5,
+		max_shots = 4,
+		shot_veloc = 3
 	}
-	
-	player={
-		playerspr={1,2},
-		x=0,
-		y=0,
-		accel=1,
-		frict=0.3
+
+	player = {
+		spr = {1, 2},
+		x = 0,
+		y = 14 * 8,
+		accel = 1,
+		shots = {}
 	}
-	
-	bsconsspr={32,33,34,35}
-	
-	local lvl=genlevel()
-	add(cfg.levels,lvl)
-			
+	local lvl = genlevel()
+	add(cfg.levels, lvl)
 end
 
-function genlevel(num)
-	local lvlterr={}
- local tile=nil
- local initial=cfg.terrspr[1]
- for i=1,16 do
- 	tile=flr(rnd(#cfg.terrspr)+initial)
- 	add(lvlterr,tile)
- end
- return lvlterr
-end
 -->8
 -- common
+
+function genlevel(num)
+	local lvlterr = {}
+	local tile = nil
+	local initial = cfg.terrspr[1]
+	for i = 1, 16 do
+		tile = flr(rnd(#cfg.terrspr) + initial)
+		add(lvlterr, tile)
+	end
+	return lvlterr
+end
 
 -->8
 -- update
 
 function _update()
+	tics = tics + 1
+	update_player()
+	update_shots()
 end
+
+function update_player()
+	if btn(0) and player.x > 0 then
+		player.x = player.x - player.accel
+	elseif btn(1) and player.x < 120 then
+		player.x = player.x + player.accel
+	end
+	if btn(2) then
+		-- shot timer
+		if tics % cfg.shot_timer == 0 then
+			if #player.shots < cfg.max_shots then
+				shot = {x = player.x, y = player.y - 4}
+				add(player.shots, shot)
+			end
+		end
+	end
+end
+
+function update_shots()
+	for shot in all(player.shots) do
+		shot.y = shot.y - cfg.shot_veloc
+		if (shot.y < -8) then
+			del(player.shots, shot)
+		end
+	end
+end
+
 -->8
 -- draw
 
---function main_draw()
 function _draw()
- cls()
-	
-	-- terrain
-	local x=0
-	local tiles=cfg.levels[1]
-	--print(#tiles)
+	cls()
+	draw_terrain()
+	draw_player()
+	draw_shots()
+end
+
+function draw_shots()
+	for shot in all(player.shots) do
+		local s = cfg.shotspr[1]
+		if shot.y % 4 == 0 then
+			s = cfg.shotspr[2]
+		end
+		spr(s, shot.x, shot.y)
+	end
+end
+
+function draw_player()
+	local s = cfg.playspr[1]
+	if player.x % 3 == 0 then
+		s = cfg.playspr[2]
+	end
+	spr(s, player.x, player.y)
+end
+
+function draw_terrain()
+	local x = 0
+	local tiles = cfg.levels[1]
 	for t in all(tiles) do
-		spr(t,x,cfg.lvl_ypos)
- 	--print(t.." x:"..x.." y:"..cfg.lvl_ypos)
- 	x+=8
+		spr(t, x, cfg.lvl_ypos)
+		x = x + 8
 	end
 end
 
 __gfx__
-00000000008008000080080000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000006006000060060000000000677677607677767000000000dd000000dd00000000000000000000000000000000000000000000000000000000000000
-00700700006006000060060000000000000d0000000d00000000000063d0000063d0000000000000000000000000000000000000000000000000000000000000
-000770000055550000555500000000006ddddaaa7ddddaaa00000000933ddaa0a33ddaa000000000000000000000000000000000000000000000000000000000
+01230000008008000080080000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+45670000006006000060060000000000677677607677767000000000dd000000dd00000000000000000000000000000000000000000000000000000000000000
+89ab0700006006000060060000000000000d0000000d00000000000063d0000063d0000000000000000000000000000000000000000000000000000000000000
+cdef70000055550000555500000000006ddddaaa7ddddaaa00000000933ddaa0a33ddaa000000000000000000000000000000000000000000000000000000000
 000770000559955005599550000000005d3333aa5d3333aa0000000056d333dd96d333dd00000000000000000000000000000000000000000000000000000000
 0070070017767761167767710000000000d333d000d333d0000000009333dd00a333dd0000000000000000000000000000000000000000000000000000000000
 0000000065155157751551560000000006d6d6d006d6d6d000000000633d0000633d000000000000000000000000000000000000000000000000000000000000
