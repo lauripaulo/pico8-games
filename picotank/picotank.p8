@@ -3,64 +3,83 @@ version 29
 __lua__
 -- init
 
-function _init()
-	game_init()
-end
+	-- map pico calls to funcs
+--	_draw = main_draw
+--	_update = main_update
+--	_init =	game_init
 
-function game_init()
-	-- sprite animations
-	-- red explosion
-	redexspr={55,56,57,58}
-	-- blue explosion
-	bluexspr={60,61,62,63}
+
+function _init()
+	-- constants
+	left=0
+	right=1
+	up=2
+	down=3
 	
-	playerspr={1,2}
+	-- game config
+	cfg={
+--		redexspr={55,56,57,58}, -- red explosion
+--	 bluexspr={60,61,62,63}, -- blue explosion
+--		score=0,
+--		gravity=0.2,
+--		maxgravity=5,
+--		chopspr={4,5}, -- chopper
+--		jetspr={7,8}, -- jet	
+--		bulletspr={17,18}, -- bullet
+		levels={},
+		lvl_ypos=15*8,
+		terrspr={48,49,50}
+	}
 	
-	-- chopper
-	chopspr={4,5}
+	player={
+		playerspr={1,2},
+		x=0,
+		y=0,
+		accel=1,
+		frict=0.3
+	}
 	
-	-- jet
-	jetspr={7,8}
-	
-	-- bullet
-	bulletspr={17,18}
-	
-	-- base terrain
-	bsterrspr={48,49,50}
 	bsconsspr={32,33,34,35}
 	
-	-- levels
-	level=[]
-	curlevel=1
-	
-	-- init level 1
-	local lvlground=[]
-	local lvlconstr=[]
-	for i=1,16 do
-		local tile=rnd(#bsconsspr)
-		add(lvlground,tile)
-	end
-	add(level,
-		{grd=lvlground},
-		{con=lvlconstr}
-	)
-	
-	-- map pico calls to funcs
-	_draw = main_draw
-	_update = main_update
-	
+	local lvl=genlevel()
+	add(cfg.levels,lvl)
+			
+end
+
+function genlevel(num)
+	local lvlterr={}
+ local tile=nil
+ local initial=cfg.terrspr[1]
+ for i=1,16 do
+ 	tile=flr(rnd(#cfg.terrspr)+initial)
+ 	add(lvlterr,tile)
+ end
+ return lvlterr
 end
 -->8
 -- common
+
 -->8
 -- update
 
-function main_update()
+function _update()
 end
 -->8
 -- draw
 
-function main_draw()
+--function main_draw()
+function _draw()
+ cls()
+	
+	-- terrain
+	local x=0
+	local tiles=cfg.levels[1]
+	--print(#tiles)
+	for t in all(tiles) do
+		spr(t,x,cfg.lvl_ypos)
+ 	--print(t.." x:"..x.." y:"..cfg.lvl_ypos)
+ 	x+=8
+	end
 end
 
 __gfx__
