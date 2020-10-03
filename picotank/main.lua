@@ -21,7 +21,13 @@ function _init()
         shot_veloc = 3
     }
 
-    player = {spr = {1, 2}, x = 0, y = 14 * 8, accel = 1, shots = {}}
+    player = {
+        spr = {1, 2}, 
+        x = 0, 
+        y = 14 * 8, 
+        accel = 1, 
+        shots = {}
+    }
 
     enemies = {
         list = {},
@@ -56,13 +62,17 @@ function create_enemy()
 	local start_y = flr(rnd(80))
 	local enemy = {
 		x = nil,
-		y = start_y,
+        y = start_y,
 		shot = false,
 		type = "chooper",
 		sprs = {4, 5},
 		timer = 3,
-		veloc = 1,
-		dir = nil
+        veloc = 1,
+        yveloc = 0,
+        dir = nil,
+        dead = false,
+        dead_tics = 0,
+        max_tics = 20 -- how much time it takes to disapear.
 	}
 	enemy.dir = flr(rnd(2))
 	if enemy.dir == 0 then
@@ -96,14 +106,14 @@ function update_colision()
             -- x1 is inside enemy box
             if htbox_x1 >= enemy.x and htbox_x1 <= enemy.x + 7 then
                 if htbox_y1 <= enemy.y + 7 and htbox_y1 >= enemy.y then
-                    del(enemies.list, enemy)
+                    enemy.dead = true
                     del(player.shots, shot)
                 end
             end
             -- x2 is inside enemy box
             if htbox_x2 >= enemy.x and htbox_x2 <= enemy.x + 7 then
                 if htbox_y1 <= enemy.y + 7 and htbox_y1 >= enemy.y then
-                    del(enemies.list, enemy)
+                    enemy.dead = true
                     del(player.shots, shot)
                 end
             end
@@ -119,7 +129,18 @@ function update_level()
 end
 
 function update_enemies()
-	for enemy in all(enemies.list) do
+    for enemy in all(enemies.list) do
+        if enemy.dead and enemy.dead_tics < enemy.max_tics then
+            enemy.dead_tics = enemy.dead_tics + 1
+            if enemy.yveloc == 0 then
+                enemy.yveloc = 1
+            else
+                enemy.yveloc = enemy.yveloc * 1.1
+            end
+            enemy.y = enemy.y + enemy.yveloc
+        elseif enemy.dead_tics == enemy.max_tics or enemy.y > cfg.lvl_ypos - 8 then
+            del(enemies.list, enemy)
+        end
 		if enemy.type == "chooper" then
 			if enemy.dir == 0 then
 				enemy.x = enemy.x + enemy.veloc
