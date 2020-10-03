@@ -19,9 +19,10 @@ function _init()
         playspr = {1, 2},
         terrspr = {48, 49, 50},
         shotspr = {17, 18},
+        explspr = {55, 56, 57, 58},
         shot_timer = 5,
         max_shots = 4,
-        shot_veloc = 3
+        shot_veloc = 2
     }
 
     player = {
@@ -38,7 +39,9 @@ function _init()
         maxx = 136,
         miny = 0,
         maxy = 80
-	}
+    }
+    
+    explosions = {}
 
     local lvl = genlevel()
 	add(cfg.levels, lvl)
@@ -75,6 +78,7 @@ function create_enemy()
         dir = nil,
         dead = false,
         dead_tics = 0,
+        explspr = 1,
         max_tics = 20 -- how much time it takes to disapear.
 	}
 	enemy.dir = flr(rnd(2))
@@ -202,7 +206,7 @@ function print_debug()
 		print("dbg"..i..":"..debug_info, 0, i * 9, 8)
 		i = i + 1
 	end
-	--dbg = {}
+	dbg = {}
 end
 
 function draw_enemies()
@@ -215,7 +219,18 @@ function draw_enemies()
 			else 
 				spr(s, enemy.x, enemy.y, 1, 1, true, false)
 			end
-		end
+        end
+        if enemy.dead then
+            if enemy.dead_tics % 2 == 0 then
+                if enemy.explspr == 5 then
+                    enemy.explspr = 1
+                else
+                    enemy.explspr = enemy.explspr + 1
+                end
+            end
+            local s = cfg.explspr[enemy.explspr]
+            otspr(s, 0, enemy.x, enemy.y, 1, 1, false, false)
+        end
 	end
 end
 
@@ -224,14 +239,13 @@ function draw_shots()
         local s = cfg.shotspr[1]
         if shot.y % 4 == 0 then s = cfg.shotspr[2] end
         spr(s, shot.x, shot.y)
-        rect(shot.x, shot.y, shot.x + 7, shot.y + 7)
     end
 end
 
 function draw_player()
     local s = cfg.playspr[1]
     if player.x % 3 == 0 then s = cfg.playspr[2] end
-    spr(s, player.x, player.y)
+    otspr(s, 0, player.x, player.y, 1, 1, false, false)
 end
 
 function draw_terrain()
@@ -241,6 +255,26 @@ function draw_terrain()
         spr(t, x, cfg.lvl_ypos)
         x = x + 8
     end
+end
+
+--
+-- draws a sprite to the screen with an outline of the specified colour
+--
+function otspr(n,col_outline,x,y,w,h,flip_x,flip_y)
+	-- reset palette to black
+	for c=1,15 do
+		pal(c,col_outline)
+	end
+	-- draw outline
+	for xx=-1,1 do
+		for yy=-1,1 do
+			spr(n,x+xx,y+yy,w,h,flip_x,flip_y)
+		end
+	end
+	-- reset palette
+	pal()
+	-- draw final sprite
+	spr(n,x,y,w,h,flip_x,flip_y)	
 end
 
 __gfx__
