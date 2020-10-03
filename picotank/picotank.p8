@@ -3,6 +3,7 @@ version 29
 __lua__
 -- init
 -- C:\Program Files (x86)\PICO-8\pico8.exe
+-- add(dbg, "update enemies:"..#enemies.list)
 function _init()
     -- constants
     left = 0
@@ -36,7 +37,8 @@ function _init()
     local lvl = genlevel()
 	add(cfg.levels, lvl)
 	
-	add(enemies.list, create_enemy())
+    add(enemies.list, create_enemy())
+    add(enemies.list, create_enemy())
 end
 
 -- >8
@@ -60,9 +62,9 @@ function create_enemy()
 		y = start_y,
 		shot = false,
 		type = "chooper",
-		sprs = {3, 5},
-		timer = 2,
-		veloc = 2,
+		sprs = {4, 5},
+		timer = 3,
+		veloc = 1,
 		dir = nil
 	}
 	enemy.dir = flr(rnd(2))
@@ -81,11 +83,45 @@ function _update()
     tics = tics + 1
     update_player()
 	update_shots()
-	update_enemies()
+    update_enemies()
+    update_colision()
+    update_level()
+end
+
+function update_colision()
+    for shot in all(player.shots) do
+        for enemy in all(enemies.list) do
+            local htbox_x1 = shot.x
+            local htbox_x2 = shot.x + 7
+            local htbox_y1 = shot.y
+            --local htbox_y2 = shot.y 
+
+            -- x1 is inside enemy box
+            if htbox_x1 >= enemy.x and htbox_x1 <= enemy.x + 7 then
+                if htbox_y1 <= enemy.y + 7 and htbox_y1 >= enemy.y then
+                    del(enemies.list, enemy)
+                    del(player.shots, shot)
+                end
+            end
+            -- x2 is inside enemy box
+            if htbox_x2 >= enemy.x and htbox_x2 <= enemy.x + 7 then
+                if htbox_y1 <= enemy.y + 7 and htbox_y1 >= enemy.y then
+                    del(enemies.list, enemy)
+                    del(player.shots, shot)
+                end
+            end
+        end
+    end
+end
+
+function update_level()
+    if #enemies.list == 0 then
+        add(enemies.list, create_enemy())
+        add(enemies.list, create_enemy())
+    end
 end
 
 function update_enemies()
-	add(dbg, "update enemies:"..#enemies.list)
 	for enemy in all(enemies.list) do
 		if enemy.type == "chooper" then
 			if enemy.dir == 0 then
@@ -99,9 +135,8 @@ function update_enemies()
 					del(enemies.list, enemy)
 				end
 			end 
-			add(dbg, "update/x:"..enemy.x.."/y:"..enemy.y.."/dir:"..enemy.dir)
 		end
-	end
+    end
 end
 
 function update_player()
@@ -146,11 +181,10 @@ function print_debug()
 		print("dbg"..i..":"..debug_info, 0, i * 9, 8)
 		i = i + 1
 	end
-	dbg = {}
+	--dbg = {}
 end
 
 function draw_enemies()
-	add(dbg, "draw/enemies:"..#enemies.list)
 	for enemy in all(enemies.list) do
 		if enemy.type == "chooper" then
 			local s = enemy.sprs[1]
@@ -169,6 +203,7 @@ function draw_shots()
         local s = cfg.shotspr[1]
         if shot.y % 4 == 0 then s = cfg.shotspr[2] end
         spr(s, shot.x, shot.y)
+        rect(shot.x, shot.y, shot.x + 7, shot.y + 7)
     end
 end
 
