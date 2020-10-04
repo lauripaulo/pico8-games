@@ -1,8 +1,8 @@
 -- init
 -- C:\Program Files (x86)\PICO-8\pico8.exe
 -- add(dbg, "update enemies:"..#enemies.list)
--- Explosion from user: https://www.lexaloffle.com/bbs/?uid=45877
--- >> code from: https://www.lexaloffle.com/bbs/?tid=39204&tkey=grSK2HnDKgU0eUp7XSe2
+-- explosion code from user: https://www.lexaloffle.com/bbs/?uid=45877
+-- >> https://www.lexaloffle.com/bbs/?tid=39204&tkey=grSK2HnDKgU0eUp7XSe2
 
 function _init()
     -- constants
@@ -207,9 +207,6 @@ function update_player()
                 add(player.shots, shot)
             end
         end
-    end
-    if btn(4) then
-        add_exp(50,50)
     end
 end
 
