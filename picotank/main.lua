@@ -1,6 +1,9 @@
 -- init
 -- C:\Program Files (x86)\PICO-8\pico8.exe
 -- add(dbg, "update enemies:"..#enemies.list)
+-- Explosion from user: https://www.lexaloffle.com/bbs/?uid=45877
+-- >> code from: https://www.lexaloffle.com/bbs/?tid=39204&tkey=grSK2HnDKgU0eUp7XSe2
+
 function _init()
     -- constants
     left = 0
@@ -38,7 +41,7 @@ function _init()
         maxy = 80
     }
     
-    explosions = {}
+    ex_emitters={}
 
     local lvl = genlevel()
 	add(cfg.levels, lvl)
@@ -49,6 +52,33 @@ end
 
 -- >8
 -- common
+
+function add_exp(x,y)
+    local e={
+        parts={},
+        x=x,
+        y=y,
+        offset={x=cos(rnd())*2,y=sin(rnd())*2},
+        age=0,
+        maxage=25
+    }
+    for i=0,5 do
+        add_exp_part(e)
+    end
+    add(ex_emitters,e)
+end
+
+function add_exp_part(e)
+        local p={
+            x=e.x+(cos(rnd())*5),
+            y=e.y+(sin(rnd())*5),
+            rad=0,
+            age=0,
+            maxage=5+rnd(10),
+            c=rnd({15,8,9,10})
+        }
+        add(e.parts,p)
+end
 
 function genlevel(num)
     local lvlterr = {}
@@ -97,6 +127,7 @@ function _update()
     update_enemies()
     update_colision()
     update_level()
+    update_explosions()
 end
 
 function update_colision()
@@ -144,6 +175,7 @@ function update_enemies()
             enemy.y = enemy.y + enemy.yveloc
         elseif enemy.dead_tics == enemy.max_tics or enemy.y > cfg.lvl_ypos - 8 then
             del(enemies.list, enemy)
+            add_exp(enemy.x, enemy.y)
         end
 		if enemy.type == "chooper" then
 			if enemy.dir == 0 then
@@ -176,6 +208,9 @@ function update_player()
             end
         end
     end
+    if btn(4) then
+        add_exp(50,50)
+    end
 end
 
 function update_shots()
@@ -185,6 +220,29 @@ function update_shots()
     end
 end
 
+function update_explosions()
+    for i=#ex_emitters,1,-1 do
+        local e=ex_emitters[i]
+        add_exp_part(e)
+        for ip=#e.parts,1,-1 do
+            local p=e.parts[ip]
+            p.rad+=1
+            p.age+=1
+            if p.age+5>p.maxage then
+                p.c=5
+            end
+            if p.age>p.maxage then
+                del(e.parts,p)
+            end       
+        end
+        e.age+=1
+        if e.age>e.maxage then
+            del(ex_emitters,e)
+        end
+    end
+end
+
+
 -- >8
 -- draw
 
@@ -193,7 +251,8 @@ function _draw()
     draw_terrain()
     draw_player()
 	draw_enemies()
-	draw_shots()
+    draw_shots()
+    draw_explosions()
 	print_debug()
 end
 
@@ -254,6 +313,13 @@ function draw_terrain()
     end
 end
 
+function draw_explosions()
+    for explosion in all(explosions) do
+        for i = 1,explosion.particles do
+            
+        end
+    end
+end
 --
 -- draws a sprite to the screen with an outline of the specified colour
 --
@@ -272,4 +338,14 @@ function otspr(n,col_outline,x,y,w,h,flip_x,flip_y)
 	pal()
 	-- draw final sprite
 	spr(n,x,y,w,h,flip_x,flip_y)	
+end
+
+function draw_explosions()
+    for e in all(ex_emitters) do
+        for p in all(e.parts) do
+            circfill(p.x,p.y,p.rad,p.c)
+            circfill(p.x+e.offset.x,p.y+e.offset.y,p.rad-3,0)                                       
+            circ(p.x+(cos(rnd())*5),p.y+(sin(rnd())*5),1,0)                                                       
+        end
+    end
 end
