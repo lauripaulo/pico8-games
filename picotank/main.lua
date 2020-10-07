@@ -172,8 +172,15 @@ function update_enemies()
             else
                 enemy.yveloc = enemy.yveloc * 1.1
             end
+            if enemy.yveloc > 5 then
+                enemy.yveloc = 5
+            end
             enemy.y = enemy.y + enemy.yveloc
-        elseif enemy.dead_tics == enemy.max_tics or enemy.y > cfg.lvl_ypos - 8 then
+            if enemy.y > cfg.lvl_ypos - 8 then
+                enemy.y = cfg.lvl_ypos - 8
+                enemy.dead_tics = enemy.max_tics
+            end
+        elseif enemy.dead_tics == enemy.max_tics or enemy.y == cfg.lvl_ypos - 8 then
             del(enemies.list, enemy)
             add_exp(enemy.x, enemy.y)
         end
