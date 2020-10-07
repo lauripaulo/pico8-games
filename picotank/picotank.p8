@@ -320,14 +320,6 @@ function draw_terrain()
     end
 end
 
-function draw_explosions()
-    for explosion in all(explosions) do
-        for i = 1,explosion.particles do
-            
-        end
-    end
-end
---
 -- draws a sprite to the screen with an outline of the specified colour
 --
 function otspr(n,col_outline,x,y,w,h,flip_x,flip_y)
