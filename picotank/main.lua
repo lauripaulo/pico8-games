@@ -40,6 +40,13 @@ function _init()
         miny = 0,
         maxy = 80
     }
+
+    tilemap = {
+        x = 0,
+        y = 0,
+        xsize = 16,
+        ysize = 16
+    }
     
     ex_emitters={}
 
@@ -252,12 +259,17 @@ end
 
 function _draw()
     cls()
-    draw_terrain()
+    --draw_terrain()
+    draw_map()
     draw_player()
 	draw_enemies()
     draw_shots()
     draw_explosions()
 	print_debug()
+end
+
+function draw_map()
+    map(tilemap.x, tilemap.y, 0, 0, tilemap.xsize, tilemap.ysize)
 end
 
 function print_debug()
