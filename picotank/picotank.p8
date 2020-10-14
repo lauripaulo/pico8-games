@@ -25,7 +25,7 @@ function _init()
         explspr = {55, 56, 57, 58},
         shot_timer = 5,
         max_shots = 4,
-        shot_veloc = 2
+        shot_veloc = 3
     }
 
     player = {
@@ -38,23 +38,20 @@ function _init()
 
     enemies = {
         list = {},
-        minx = -8,
-        maxx = 136,
+        minx = -16,
+        maxx = 256 + 8,
         miny = 0,
-        maxy = 80
+        maxy = 256 - 8
     }
 
     tilemap = {
         x = 0,
         y = 0,
-        xsize = 16,
+        xsize = 32,
         ysize = 16
     }
     
     ex_emitters={}
-
-    local lvl = genlevel()
-	add(cfg.levels, lvl)
 	
     add(enemies.list, create_enemy())
     add(enemies.list, create_enemy())
@@ -90,17 +87,6 @@ function add_exp_part(e)
         add(e.parts,p)
 end
 
-function genlevel(num)
-    local lvlterr = {}
-    local tile = nil
-    local initial = cfg.terrspr[1]
-    for i = 1, 16 do
-        tile = flr(rnd(#cfg.terrspr) + initial)
-        add(lvlterr, tile)
-    end
-    return lvlterr
-end
-
 function create_enemy()
 	local start_y = flr(rnd(80))
 	local enemy = {
@@ -110,7 +96,7 @@ function create_enemy()
 		type = "chooper",
 		sprs = {4, 5},
 		timer = 3,
-        veloc = 1,
+        veloc = rnd(3) + 1,
         yveloc = 0,
         dir = nil,
         dead = false,
@@ -122,7 +108,7 @@ function create_enemy()
 	if enemy.dir == 0 then
 		enemy.x = -8
 	else
-		enemy.x = 136
+		enemy.x = 256 + 8
 	end
 	return enemy
 end
@@ -197,7 +183,7 @@ function update_enemies()
 		if enemy.type == "chooper" then
 			if enemy.dir == 0 then
 				enemy.x = enemy.x + enemy.veloc
-				if enemy.x > 136 then
+				if enemy.x > 256 + 8 then
 					del(enemies.list, enemy)
 				end
 			else
@@ -213,7 +199,7 @@ end
 function update_player()
     if btn(0) and player.x > 0 then
         player.x = player.x - player.accel
-    elseif btn(1) and player.x < 120 then
+    elseif btn(1) and player.x < 248 then
         player.x = player.x + player.accel
     end
     if btn(2) then
@@ -272,7 +258,17 @@ function _draw()
 end
 
 function draw_map()
-    map(tilemap.x, tilemap.y, 1, 1, tilemap.xsize, tilemap.ysize)
+    local ctrx = (128 / 2) - 4
+    local ctry = (128 / 2) - 4
+    if player.x > ctrx and player.x < 188 then
+        camera( -64 + player.x + 4, 0) 
+    elseif player.x > 187 then
+        camera(128, 0) 
+    else
+        camera()
+    end
+    map(tilemap.x, tilemap.y, 0, 0, tilemap.xsize, tilemap.ysize)
+    add(dbg, "player x:"..player.x)
 end
 
 function print_debug()
