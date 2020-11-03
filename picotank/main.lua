@@ -271,7 +271,7 @@ end
 function print_debug()
 	local i = 1
 	for debug_info in all(dbg) do
-		print("dbg"..i..":"..debug_info, 0, i * 9, 8)
+		print("dbg"..i..":"..debug_info, player.x, 0, 8)
 		i = i + 1
 	end
 	dbg = {}
