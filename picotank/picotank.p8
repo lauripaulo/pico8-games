@@ -1,369 +1,360 @@
 pico-8 cartridge // http://www.pico-8.com
-version 29
+version 30
 __lua__
 -- init
--- C:\Program Files (x86)\PICO-8\pico8.exe
+-- c:\program files (x86)\pico-8\pico8.exe
 -- add(dbg, "update enemies:"..#enemies.list)
 -- explosion code from user: https://www.lexaloffle.com/bbs/?uid=45877
--- >> https://www.lexaloffle.com/bbs/?tid=39204&tkey=grSK2HnDKgU0eUp7XSe2
+-- >> https://www.lexaloffle.com/bbs/?tid=39204&tkey=grsk2hndkgu0eup7xse2
 
 function _init()
-    -- constants
-    left = 0
-    right = 1
-    up = 2
-    down = 3
-	tics = 0
-	dbg = {}
+  -- constants
+  left=0
+  right=1
+  up=2
+  down=3
+  tics=0
+  dbg={}
 
-    cfg = {
-        levels = {},
-        lvl_ypos = 15 * 8,
-        playspr = {1, 2},
-        terrspr = {48, 49, 50},
-        shotspr = {17, 18},
-        explspr = {55, 56, 57, 58},
-        shot_timer = 5,
-        max_shots = 4,
-        shot_veloc = 3
-    }
-
-    player = {
-        spr = {1, 2}, 
-        x = 0, 
-        y = 14 * 8, 
-        accel = 1, 
-        shots = {}
-    }
-
-    enemies = {
-        list = {},
-        minx = -16,
-        maxx = 256 + 8,
-        miny = 0,
-        maxy = 256 - 8
-    }
-
-    tilemap = {
-        x = 0,
-        y = 0,
-        xsize = 32,
-        ysize = 16
-    }
-    
-    ex_emitters={}
-	
-    add(enemies.list, create_enemy())
-    add(enemies.list, create_enemy())
+  cfg={
+    levels={},
+    lvl_ypos=15 * 8,
+    playspr={1, 2},
+    terrspr={48, 49, 50},
+    shotspr={17, 18},
+    explspr={55, 56, 57, 58},
+    shot_timer=5,
+    max_shots=4,
+    shot_veloc=3
+  }
+  player={
+    spr={1, 2}, 
+    x=0, 
+    y=14 * 8, 
+    accel=1.5, 
+    shots={}
+  }
+  enemies={
+    list={},
+    minx=-16,
+    maxx=256 + 8,
+    miny=0,
+    maxy=256 - 8
+  }
+  tilemap={
+    x=0,
+    y=0,
+    xsize=32,
+    ysize=16
+  }
+  ex_emitters={}	
+  add(enemies.list, create_enemy())
+  add(enemies.list, create_enemy())
 end
-
--- >8
--- common
+-->8
+-- common 
 
 function add_exp(x,y)
-    local e={
-        parts={},
-        x=x,
-        y=y,
-        offset={x=cos(rnd())*2,y=sin(rnd())*2},
-        age=0,
-        maxage=25
-    }
-    for i=0,5 do
-        add_exp_part(e)
-    end
-    add(ex_emitters,e)
+  local e={
+    parts={},
+    x=x,
+    y=y,
+    offset={x=cos(rnd())*2,y=sin(rnd())*2},
+    age=0,
+    maxage=25
+  }
+  for i=0,5 do
+    add_exp_part(e)
+  end
+  add(ex_emitters,e)
 end
 
 function add_exp_part(e)
-        local p={
-            x=e.x+(cos(rnd())*5),
-            y=e.y+(sin(rnd())*5),
-            rad=0,
-            age=0,
-            maxage=5+rnd(10),
-            c=rnd({15,8,9,10})
-        }
-        add(e.parts,p)
+  local p={
+    x=e.x+(cos(rnd())*5),
+    y=e.y+(sin(rnd())*5),
+    rad=0,
+    age=0,
+    maxage=5+rnd(10),
+    c=rnd({15,8,9,10})
+   }
+   add(e.parts,p)
 end
 
 function create_enemy()
-	local start_y = flr(rnd(80))
-	local enemy = {
-		x = nil,
-        y = start_y,
-		shot = false,
-		type = "chooper",
-		sprs = {4, 5},
-		timer = 3,
-        veloc = rnd(3) + 1,
-        yveloc = 0,
-        dir = nil,
-        dead = false,
-        dead_tics = 0,
-        explspr = 1,
-        max_tics = 20 -- how much time it takes to disapear.
-	}
-	enemy.dir = flr(rnd(2))
-	if enemy.dir == 0 then
-		enemy.x = -8
-	else
-		enemy.x = 256 + 8
-	end
-	return enemy
+  local start_y=flr(rnd(80))
+  local enemy={
+    x=nil,
+    y=start_y,
+    shot=false,
+    type="chooper",
+    sprs={4, 5},
+    timer=2,
+    veloc=rnd(2) + 1,
+    yveloc=0,
+    dir=nil,
+    dead=false,
+    dead_tics=0,
+    explspr=1,
+    max_tics=20 -- how much time it takes to disapear.
+  }
+  enemy.dir=flr(rnd(2))
+  if enemy.dir == 0 then
+    enemy.x=-8
+  else
+    enemy.x=256 + 8
+  end
+  return enemy
 end
 
--- >8
+-->8
 -- update
 
 function _update()
-    tics = tics + 1
-    update_player()
-	update_shots()
-    update_enemies()
-    update_colision()
-    update_level()
-    update_explosions()
+  tics=tics + 1
+  update_player()
+  update_shots()
+  update_enemies()
+  update_colision()
+  update_level()
+  update_explosions()
 end
 
 function update_colision()
-    for shot in all(player.shots) do
-        for enemy in all(enemies.list) do
-            local htbox_x1 = shot.x
-            local htbox_x2 = shot.x + 7
-            local htbox_y1 = shot.y
-            --local htbox_y2 = shot.y 
-
-            -- x1 is inside enemy box
-            if htbox_x1 >= enemy.x and htbox_x1 <= enemy.x + 7 then
-                if htbox_y1 <= enemy.y + 7 and htbox_y1 >= enemy.y then
-                    enemy.dead = true
-                    del(player.shots, shot)
-                end
-            end
-            -- x2 is inside enemy box
-            if htbox_x2 >= enemy.x and htbox_x2 <= enemy.x + 7 then
-                if htbox_y1 <= enemy.y + 7 and htbox_y1 >= enemy.y then
-                    enemy.dead = true
-                    del(player.shots, shot)
-                end
-            end
+  for shot in all(player.shots) do
+    for enemy in all(enemies.list) do
+      local htbox_x1=shot.x
+      local htbox_x2=shot.x + 7
+      local htbox_y1=shot.y
+      --local htbox_y2=shot.y 
+      -- x1 is inside enemy box
+      if htbox_x1 >= enemy.x and htbox_x1 <= enemy.x + 7 then
+        if htbox_y1 <= enemy.y + 7 and htbox_y1 >= enemy.y then
+            enemy.dead=true
+            del(player.shots, shot)
         end
+      end
+      -- x2 is inside enemy box
+      if htbox_x2 >= enemy.x and htbox_x2 <= enemy.x + 7 then
+        if htbox_y1 <= enemy.y + 7 and htbox_y1 >= enemy.y then
+            enemy.dead=true
+            del(player.shots, shot)
+        end
+      end
     end
+  end
 end
 
 function update_level()
-    if #enemies.list == 0 then
-        add(enemies.list, create_enemy())
-        add(enemies.list, create_enemy())
-    end
+  if #enemies.list == 0 then
+    add(enemies.list, create_enemy())
+    add(enemies.list, create_enemy())
+  end
 end
 
 function update_enemies()
-    for enemy in all(enemies.list) do
-        if enemy.dead and enemy.dead_tics < enemy.max_tics then
-            enemy.dead_tics = enemy.dead_tics + 1
-            if enemy.yveloc == 0 then
-                enemy.yveloc = 1
-            else
-                enemy.yveloc = enemy.yveloc * 1.1
-            end
-            if enemy.yveloc > 5 then
-                enemy.yveloc = 5
-            end
-            enemy.y = enemy.y + enemy.yveloc
-            if enemy.y > cfg.lvl_ypos - 8 then
-                enemy.y = cfg.lvl_ypos - 8
-                enemy.dead_tics = enemy.max_tics
-            end
-        elseif enemy.dead_tics == enemy.max_tics or enemy.y == cfg.lvl_ypos - 8 then
-            del(enemies.list, enemy)
-            add_exp(enemy.x, enemy.y)
-        end
-		if enemy.type == "chooper" then
-			if enemy.dir == 0 then
-				enemy.x = enemy.x + enemy.veloc
-				if enemy.x > 256 + 8 then
-					del(enemies.list, enemy)
-				end
-			else
-				enemy.x = enemy.x - enemy.veloc
-				if enemy.x < -8 then
-					del(enemies.list, enemy)
-				end
-			end 
-		end
+  for enemy in all(enemies.list) do
+    if enemy.dead and enemy.dead_tics < enemy.max_tics then
+      enemy.dead_tics=enemy.dead_tics + 1
+      if enemy.yveloc == 0 then
+        enemy.yveloc=1
+      else
+        enemy.yveloc=enemy.yveloc * 1.1
+      end
+      if enemy.yveloc > 5 then
+        enemy.yveloc=5
+      end
+      enemy.y=enemy.y + enemy.yveloc
+      if enemy.y > cfg.lvl_ypos - 8 then
+         enemy.y=cfg.lvl_ypos - 8
+         enemy.dead_tics=enemy.max_tics
+      end      
+    elseif enemy.dead_tics == enemy.max_tics or enemy.y == cfg.lvl_ypos - 8 then
+      del(enemies.list, enemy)
+      add_exp(enemy.x, enemy.y)
+    end      
+    if enemy.type == "chooper" then
+      if enemy.dir == 0 then
+        enemy.x=enemy.x + enemy.veloc
+        if enemy.x > 256 + 8 then
+		  del(enemies.list, enemy)
+	    end
+      else
+	    enemy.x=enemy.x - enemy.veloc
+	    if enemy.x < -8 then
+		  del(enemies.list, enemy)
+	    end
+	  end 
     end
+  end
 end
 
 function update_player()
-    if btn(0) and player.x > 0 then
-        player.x = player.x - player.accel
-    elseif btn(1) and player.x < 248 then
-        player.x = player.x + player.accel
+  if btn(0) and player.x > 0 then
+    player.x=player.x - player.accel
+  elseif btn(1) and player.x < 248 then
+    player.x=player.x + player.accel
+  end
+  if btn(2) then
+    -- shot timer
+    if tics % cfg.shot_timer == 0 then
+      if #player.shots < cfg.max_shots then
+        shot={x=player.x, y=player.y - 4}
+        add(player.shots, shot)
+      end
     end
-    if btn(2) then
-        -- shot timer
-        if tics % cfg.shot_timer == 0 then
-            if #player.shots < cfg.max_shots then
-                shot = {x = player.x, y = player.y - 4}
-                add(player.shots, shot)
-            end
-        end
-    end
+  end
 end
 
 function update_shots()
-    for shot in all(player.shots) do
-        shot.y = shot.y - cfg.shot_veloc
-        if (shot.y < -8) then del(player.shots, shot) end
-    end
+  for shot in all(player.shots) do
+    shot.y=shot.y - cfg.shot_veloc
+    if (shot.y < -8) then del(player.shots, shot) end
+  end
 end
 
 function update_explosions()
-    for i=#ex_emitters,1,-1 do
-        local e=ex_emitters[i]
-        add_exp_part(e)
-        for ip=#e.parts,1,-1 do
-            local p=e.parts[ip]
-            p.rad+=1
-            p.age+=1
-            if p.age+5>p.maxage then
-                p.c=5
-            end
-            if p.age>p.maxage then
-                del(e.parts,p)
-            end       
-        end
-        e.age+=1
-        if e.age>e.maxage then
-            del(ex_emitters,e)
-        end
-    end
+  for i=#ex_emitters,1,-1 do
+    local e=ex_emitters[i]
+    add_exp_part(e)
+    for ip=#e.parts,1,-1 do
+      local p=e.parts[ip]
+       p.rad+=1
+       p.age+=1
+       if p.age+5>p.maxage then
+         p.c=5
+       end
+       if p.age>p.maxage then
+         del(e.parts,p)
+       end       
+     end
+     e.age+=1
+     if e.age>e.maxage then
+       del(ex_emitters,e)
+     end
+  end
 end
 
-
--- >8
+-->8
 -- draw
 
 function _draw()
-    cls()
-    --draw_terrain()
-    draw_map()
-    draw_player()
-	draw_enemies()
-    draw_shots()
-    draw_explosions()
-	print_debug()
+  cls()
+  --draw_terrain()
+  draw_map()
+  draw_player()
+  draw_enemies()
+  draw_shots()
+  draw_explosions()
+  print_debug()
 end
 
 function draw_map()
-    local ctrx = (128 / 2) - 4
-    local ctry = (128 / 2) - 4
-    if player.x > ctrx and player.x < 188 then
-        camera( -64 + player.x + 4, 0) 
-    elseif player.x > 187 then
-        camera(128, 0) 
-    else
-        camera()
-    end
-    map(tilemap.x, tilemap.y, 0, 0, tilemap.xsize, tilemap.ysize)
-    add(dbg, "player x:"..player.x)
+  local ctrx=(128 / 2) - 4
+  local ctry=(128 / 2) - 4
+  if player.x > ctrx and player.x < 188 then
+    camera( -64 + player.x + 4, 0)
+  elseif player.x > 187 then
+    camera(128, 0)
+  else
+    camera()
+  end
+  map(tilemap.x, tilemap.y, 0, 0, tilemap.xsize, tilemap.ysize)
+  add(dbg, "player x:"..player.x)
 end
 
 function print_debug()
-	local i = 1
-	for debug_info in all(dbg) do
-		print("dbg"..i..":"..debug_info, player.x, 0, 8)
-		i = i + 1
-	end
-	dbg = {}
+  local i=1
+  for debug_info in all(dbg) do
+    print("dbg"..i..":"..debug_info, player.x, 0, 8)
+    i=i + 1
+  end
+  dbg={}
 end
 
 function draw_enemies()
-	for enemy in all(enemies.list) do
-		if enemy.type == "chooper" then
-			local s = enemy.sprs[1]
-			if enemy.x % enemy.timer == 0 then s = enemy.sprs[2] end
-			if enemy.dir == 0 then
-				spr(s, enemy.x, enemy.y)
-			else 
-				spr(s, enemy.x, enemy.y, 1, 1, true, false)
-			end
+  for enemy in all(enemies.list) do
+    if enemy.type == "chooper" then
+      local s=enemy.sprs[1]
+      if tics % enemy.timer == 0 then s=enemy.sprs[2] end
+			   if enemy.dir == 0 then
+        spr(s, enemy.x, enemy.y)
+      else 
+        spr(s, enemy.x, enemy.y, 1, 1, true, false)
+      end
+    end
+    if enemy.dead then
+      if enemy.dead_tics % 2 == 0 then
+        if enemy.explspr == 5 then
+          enemy.explspr=1
+        else
+          enemy.explspr=enemy.explspr + 1
         end
-        if enemy.dead then
-            if enemy.dead_tics % 2 == 0 then
-                if enemy.explspr == 5 then
-                    enemy.explspr = 1
-                else
-                    enemy.explspr = enemy.explspr + 1
-                end
-            end
-            local s = cfg.explspr[enemy.explspr]
-            otspr(s, 0, enemy.x, enemy.y, 1, 1, false, false)
-        end
-	end
+      end
+      local s=cfg.explspr[enemy.explspr]
+      otspr(s, 0, enemy.x, enemy.y, 1, 1, false, false)
+    end
+  end
 end
 
 function draw_shots()
-    for shot in all(player.shots) do
-        local s = cfg.shotspr[1]
-        if shot.y % 4 == 0 then s = cfg.shotspr[2] end
-        spr(s, shot.x, shot.y)
-    end
+  for shot in all(player.shots) do
+    local s=cfg.shotspr[1]
+    if shot.y % 4 == 0 then s=cfg.shotspr[2] end
+      spr(s, shot.x, shot.y)
+  end
 end
 
 function draw_player()
-    local s = cfg.playspr[1]
-    if player.x % 3 == 0 then s = cfg.playspr[2] end
-    otspr(s, 0, player.x, player.y, 1, 1, false, false)
+  local s=cfg.playspr[1]
+  if player.x % 3 == 0 then s=cfg.playspr[2] end
+  otspr(s, 0, player.x, player.y, 1, 1, false, false)
 end
 
 function draw_terrain()
-    local x = 0
-    local tiles = cfg.levels[1]
-    for t in all(tiles) do
-        spr(t, x, cfg.lvl_ypos)
-        x = x + 8
-    end
+  local x=0
+  local tiles=cfg.levels[1]
+  for t in all(tiles) do
+    spr(t, x, cfg.lvl_ypos)
+    x=x + 8
+  end
 end
 
 -- draws a sprite to the screen with an outline of the specified colour
 --
 function otspr(n,col_outline,x,y,w,h,flip_x,flip_y)
-	-- reset palette to black
-	for c=1,15 do
-		pal(c,col_outline)
-	end
-	-- draw outline
-	for xx=-1,1 do
-		for yy=-1,1 do
-			spr(n,x+xx,y+yy,w,h,flip_x,flip_y)
-		end
-	end
-	-- reset palette
-	pal()
-	-- draw final sprite
-	spr(n,x,y,w,h,flip_x,flip_y)	
+  -- reset palette to black
+  for c=1,15 do
+    pal(c,col_outline)
+  end
+  -- draw outline
+  for xx=-1,1 do
+    for yy=-1,1 do
+      spr(n,x+xx,y+yy,w,h,flip_x,flip_y)
+    end
+  end
+  -- reset palette
+  pal()
+  -- draw final sprite
+  spr(n,x,y,w,h,flip_x,flip_y)	
 end
 
 function draw_explosions()
-    for e in all(ex_emitters) do
-        for p in all(e.parts) do
-            circfill(p.x,p.y,p.rad,p.c)
-            circfill(p.x+e.offset.x,p.y+e.offset.y,p.rad-3,0)                                       
-            circ(p.x+(cos(rnd())*5),p.y+(sin(rnd())*5),1,0)                                                       
-        end
-    end
+  for e in all(ex_emitters) do
+    for p in all(e.parts) do
+      circfill(p.x,p.y,p.rad,p.c)
+      circfill(p.x+e.offset.x,p.y+e.offset.y,p.rad-3,0)                                       
+      circ(p.x+(cos(rnd())*5),p.y+(sin(rnd())*5),1,0)                                                       
+     end
+  end
 end
-
 __gfx__
 01230000008008000080080000000000000000000000000000000000000000000000000000000000000000000055660000665500000000000000000000000000
-45670000006006000060060000000000677677607677767000000000dd000000dd0000000000000000000000cc55600000065500000000000000000000000000
+45670000006006000060060000000000677677600557550000000000dd000000dd0000000000000000000000cc55600000065500000000000000000000000000
 89ab0700006006000060060000000000000d0000000d00000000000063d0000063d000000000000000000000cc556000000655cc000000000000000000000000
-cdef70000055550000555500000000006ddddccc7ddddccc00000000933ddcc0a33ddcc00000000000000000cc556000000655cc000000000000000000000000
+cdef70000055550000555500000000005ddddccc7ddddccc00000000933ddcc0a33ddcc00000000000000000cc556000000655cc000000000000000000000000
 000770000559955005599550000000005d3333cc5d3333cc0000000056d333dd96d333dd000000000000000011556000000655cc000000000000000000000000
-0070070017767761167767710000000000d333d000d333d0000000009333dd00a333dd0000000000000000001155600000065511000000000000000000000000
+0070070017767761167767710000000000d333dc00d333dc000000009333dd00a333dd0000000000000000001155600000065511000000000000000000000000
 0000000065155157751551560000000006d6060006d6060000000000633d0000633d000000000000000000006666666666666666000000000000000000000000
 00000000167767711776776100000000006666600066666000000000ddd00000ddd0000000000000000000006666666666666666000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000004444444444444444000000000000000000000000
@@ -399,7 +390,7 @@ cdef70000055550000555500000000006ddddccc7ddddccc00000000933ddcc0a33ddcc000000000
 6cc88cc65cc88cc51cc88cc100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 06666660055555500111111000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 __gff__
-0001010001000101010000010100000000000000000000000000000101000000040404040004000000000000000000000101010303040000000000000000000001010100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0001010001010101010000010100000000000000000000010100000101000000040404040004000000000000000000000101010303040000000000000000000001010100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 __map__
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
