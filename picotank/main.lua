@@ -6,43 +6,43 @@
 
 function _init()
   -- constants
-  left = 0
-  right = 1
-  up = 2
-  down = 3
-  tics = 0
-  dbg = {}
+  left=0
+  right=1
+  up=2
+  down=3
+  tics=0
+  dbg={}
 
-  cfg = {
-    levels = {},
-    lvl_ypos = 15 * 8,
-    playspr = {1, 2},
-    terrspr = {48, 49, 50},
-    shotspr = {17, 18},
-    explspr = {55, 56, 57, 58},
-    shot_timer = 5,
-    max_shots = 4,
-    shot_veloc = 3
+  cfg={
+    levels={},
+    lvl_ypos=15 * 8,
+    playspr={1, 2},
+    terrspr={48, 49, 50},
+    shotspr={17, 18},
+    explspr={55, 56, 57, 58},
+    shot_timer=5,
+    max_shots=4,
+    shot_veloc=3
   }
-  player = {
-    spr = {1, 2}, 
-    x = 0, 
-    y = 14 * 8, 
-    accel = 1, 
-    shots = {}
+  player={
+    spr={1, 2}, 
+    x=0, 
+    y=14 * 8, 
+    accel=1, 
+    shots={}
   }
-  enemies = {
-    list = {},
-    minx = -16,
-    maxx = 256 + 8,
-    miny = 0,
-    maxy = 256 - 8
+  enemies={
+    list={},
+    minx=-16,
+    maxx=256 + 8,
+    miny=0,
+    maxy=256 - 8
   }
-  tilemap = {
-    x = 0,
-    y = 0,
-    xsize = 32,
-    ysize = 16
+  tilemap={
+    x=0,
+    y=0,
+    xsize=32,
+    ysize=16
   }
   ex_emitters={}	
   add(enemies.list, create_enemy())
@@ -80,27 +80,27 @@ function add_exp_part(e)
 end
 
 function create_enemy()
-  local start_y = flr(rnd(80))
-  local enemy = {
-    x = nil,
-    y = start_y,
-    shot = false,
-    type = "chooper",
-    sprs = {4, 5},
-    timer = 3,
-    veloc = rnd(3) + 1,
-    yveloc = 0,
-    dir = nil,
-    dead = false,
-    dead_tics = 0,
-    explspr = 1,
-    max_tics = 20 -- how much time it takes to disapear.
+  local start_y=flr(rnd(80))
+  local enemy={
+    x=nil,
+    y=start_y,
+    shot=false,
+    type="chooper",
+    sprs={4, 5},
+    timer=3,
+    veloc=rnd(3) + 1,
+    yveloc=0,
+    dir=nil,
+    dead=false,
+    dead_tics=0,
+    explspr=1,
+    max_tics=20 -- how much time it takes to disapear.
   }
-  enemy.dir = flr(rnd(2))
+  enemy.dir=flr(rnd(2))
   if enemy.dir == 0 then
-    enemy.x = -8
+    enemy.x=-8
   else
-    enemy.x = 256 + 8
+    enemy.x=256 + 8
   end
   return enemy
 end
@@ -109,7 +109,7 @@ end
 -- update
 
 function _update()
-  tics = tics + 1
+  tics=tics + 1
   update_player()
   update_shots()
   update_enemies()
@@ -121,21 +121,21 @@ end
 function update_colision()
   for shot in all(player.shots) do
     for enemy in all(enemies.list) do
-      local htbox_x1 = shot.x
-      local htbox_x2 = shot.x + 7
-      local htbox_y1 = shot.y
-      --local htbox_y2 = shot.y 
+      local htbox_x1=shot.x
+      local htbox_x2=shot.x + 7
+      local htbox_y1=shot.y
+      --local htbox_y2=shot.y 
       -- x1 is inside enemy box
       if htbox_x1 >= enemy.x and htbox_x1 <= enemy.x + 7 then
         if htbox_y1 <= enemy.y + 7 and htbox_y1 >= enemy.y then
-            enemy.dead = true
+            enemy.dead=true
             del(player.shots, shot)
         end
       end
       -- x2 is inside enemy box
       if htbox_x2 >= enemy.x and htbox_x2 <= enemy.x + 7 then
         if htbox_y1 <= enemy.y + 7 and htbox_y1 >= enemy.y then
-            enemy.dead = true
+            enemy.dead=true
             del(player.shots, shot)
         end
       end
@@ -153,19 +153,19 @@ end
 function update_enemies()
   for enemy in all(enemies.list) do
     if enemy.dead and enemy.dead_tics < enemy.max_tics then
-      enemy.dead_tics = enemy.dead_tics + 1
+      enemy.dead_tics=enemy.dead_tics + 1
       if enemy.yveloc == 0 then
-        enemy.yveloc = 1
+        enemy.yveloc=1
       else
-        enemy.yveloc = enemy.yveloc * 1.1
+        enemy.yveloc=enemy.yveloc * 1.1
       end
       if enemy.yveloc > 5 then
-        enemy.yveloc = 5
+        enemy.yveloc=5
       end
-      enemy.y = enemy.y + enemy.yveloc
+      enemy.y=enemy.y + enemy.yveloc
       if enemy.y > cfg.lvl_ypos - 8 then
-         enemy.y = cfg.lvl_ypos - 8
-         enemy.dead_tics = enemy.max_tics
+         enemy.y=cfg.lvl_ypos - 8
+         enemy.dead_tics=enemy.max_tics
       end      
     elseif enemy.dead_tics == enemy.max_tics or enemy.y == cfg.lvl_ypos - 8 then
       del(enemies.list, enemy)
@@ -173,12 +173,12 @@ function update_enemies()
     end      
     if enemy.type == "chooper" then
       if enemy.dir == 0 then
-        enemy.x = enemy.x + enemy.veloc
+        enemy.x=enemy.x + enemy.veloc
         if enemy.x > 256 + 8 then
 		  del(enemies.list, enemy)
 	    end
       else
-	    enemy.x = enemy.x - enemy.veloc
+	    enemy.x=enemy.x - enemy.veloc
 	    if enemy.x < -8 then
 		  del(enemies.list, enemy)
 	    end
@@ -189,15 +189,15 @@ end
 
 function update_player()
   if btn(0) and player.x > 0 then
-    player.x = player.x - player.accel
+    player.x=player.x - player.accel
   elseif btn(1) and player.x < 248 then
-    player.x = player.x + player.accel
+    player.x=player.x + player.accel
   end
   if btn(2) then
     -- shot timer
     if tics % cfg.shot_timer == 0 then
       if #player.shots < cfg.max_shots then
-        shot = {x = player.x, y = player.y - 4}
+        shot={x=player.x, y=player.y - 4}
         add(player.shots, shot)
       end
     end
@@ -206,7 +206,7 @@ end
 
 function update_shots()
   for shot in all(player.shots) do
-    shot.y = shot.y - cfg.shot_veloc
+    shot.y=shot.y - cfg.shot_veloc
     if (shot.y < -8) then del(player.shots, shot) end
   end
 end
@@ -248,8 +248,8 @@ function _draw()
 end
 
 function draw_map()
-  local ctrx = (128 / 2) - 4
-  local ctry = (128 / 2) - 4
+  local ctrx=(128 / 2) - 4
+  local ctry=(128 / 2) - 4
   if player.x > ctrx and player.x < 188 then
     camera( -64 + player.x + 4, 0)
   elseif player.x > 187 then
@@ -262,19 +262,19 @@ function draw_map()
 end
 
 function print_debug()
-  local i = 1
+  local i=1
   for debug_info in all(dbg) do
     print("dbg"..i..":"..debug_info, player.x, 0, 8)
-    i = i + 1
+    i=i + 1
   end
-  dbg = {}
+  dbg={}
 end
 
 function draw_enemies()
   for enemy in all(enemies.list) do
     if enemy.type == "chooper" then
-      local s = enemy.sprs[1]
-      if enemy.x % enemy.timer == 0 then s = enemy.sprs[2] end
+      local s=enemy.sprs[1]
+      if enemy.x % enemy.timer == 0 then s=enemy.sprs[2] end
         if enemy.dir == 0 then
           spr(s, enemy.x, enemy.y)
         else 
@@ -284,12 +284,12 @@ function draw_enemies()
       if enemy.dead then
         if enemy.dead_tics % 2 == 0 then
           if enemy.explspr == 5 then
-            enemy.explspr = 1
+            enemy.explspr=1
           else
-            enemy.explspr = enemy.explspr + 1
+            enemy.explspr=enemy.explspr + 1
           end
         end
-        local s = cfg.explspr[enemy.explspr]
+        local s=cfg.explspr[enemy.explspr]
         otspr(s, 0, enemy.x, enemy.y, 1, 1, false, false)
       end
     end
@@ -298,24 +298,24 @@ end
 
 function draw_shots()
   for shot in all(player.shots) do
-    local s = cfg.shotspr[1]
-    if shot.y % 4 == 0 then s = cfg.shotspr[2] end
+    local s=cfg.shotspr[1]
+    if shot.y % 4 == 0 then s=cfg.shotspr[2] end
       spr(s, shot.x, shot.y)
   end
 end
 
 function draw_player()
-  local s = cfg.playspr[1]
-  if player.x % 3 == 0 then s = cfg.playspr[2] end
+  local s=cfg.playspr[1]
+  if player.x % 3 == 0 then s=cfg.playspr[2] end
   otspr(s, 0, player.x, player.y, 1, 1, false, false)
 end
 
 function draw_terrain()
-  local x = 0
-  local tiles = cfg.levels[1]
+  local x=0
+  local tiles=cfg.levels[1]
   for t in all(tiles) do
     spr(t, x, cfg.lvl_ypos)
-    x = x + 8
+    x=x + 8
   end
 end
 
