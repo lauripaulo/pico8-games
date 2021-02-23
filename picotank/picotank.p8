@@ -26,7 +26,7 @@ function _init()
   }
   player={
     spr={1, 2},
-    x=0,
+    x=60,
     y=14 * 8,
     accel=1.5,
     shots={},
