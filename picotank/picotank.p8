@@ -1,9 +1,6 @@
 pico-8 cartridge // http://www.pico-8.com
 version 30
 __lua__
--- init
--- c:\program files (x86)\pico-8\pico8.exe
--- add(dbg, "update enemies:"..#enemies.list)
 -- explosion code from user: https://www.lexaloffle.com/bbs/?uid=45877
 -- >> https://www.lexaloffle.com/bbs/?tid=39204&tkey=grsk2hndkgu0eup7xse2
 
@@ -28,13 +25,13 @@ function _init()
     shot_veloc=3
   }
   player={
-    spr={1, 2}, 
-    x=0, 
-    y=14 * 8, 
-    accel=1.5, 
+    spr={1, 2},
+    x=0,
+    y=14 * 8,
+    accel=1.5,
     shots={},
     points=0,
-    shotdown=0    
+    shotdown=0
   }
   level=makelevel(1)
   enemies={
@@ -50,7 +47,7 @@ function _init()
     xsize=32,
     ysize=16
   }
-  ex_emitters={}	
+  ex_emitters={}
   add(enemies.list, create_enemy())
   add(enemies.list, create_enemy())
 end
@@ -65,14 +62,14 @@ function makelevel(level)
 		    },
 		    maxvel=1.5,
  	    enemies=20,
- 	    shotenemies=0,
+ 	    shot_enemies=0,
  	    maxparallel=2
-		  } 
+		  }
 	 end
 	 return cfg
 end
 -->8
--- common 
+-- common
 
 function add_exp(x,y)
   local e={
@@ -104,7 +101,8 @@ end
 function create_enemy()
   local start_y=flr(rnd(80))
   local enemy=nil
-  typ=rnd(#level.enemytypes)
+  typ=flr(rnd(2))
+  printh(typ)
   if typ == 1 then
   	 enemy=makechooper(start_y)
   else
@@ -120,6 +118,7 @@ function create_enemy()
 end
 
 function makechooper(start_y)
+  printh("makechooper")
   return {
     x=nil,
     y=start_y,
@@ -138,6 +137,7 @@ function makechooper(start_y)
 end
 
 function makejet(start_y)
+  printh("jet")
   return {
     x=nil,
     y=start_y,
@@ -174,12 +174,13 @@ function update_colision()
       local htbox_x1=shot.x
       local htbox_x2=shot.x + 7
       local htbox_y1=shot.y
-      --local htbox_y2=shot.y 
+      --local htbox_y2=shot.y
       -- x1 is inside enemy box
       if htbox_x1 >= enemy.x and htbox_x1 <= enemy.x + 7 then
         if htbox_y1 <= enemy.y + 7 and htbox_y1 >= enemy.y then
             enemy.dead=true
             del(player.shots, shot)
+            update_stats(enemy)
         end
       end
       -- x2 is inside enemy box
@@ -191,6 +192,15 @@ function update_colision()
       end
     end
   end
+end
+
+function update_stats(dead)
+  if dead.class == "chooper" then
+    player.points += 50
+  elseif dead.class == "jet" then
+    player.points += 70
+   end
+   player.shotdown += 1
 end
 
 function update_level()
@@ -216,12 +226,12 @@ function update_enemies()
       if enemy.y > cfg.lvl_ypos - 8 then
          enemy.y=cfg.lvl_ypos - 8
          enemy.dead_tics=enemy.max_tics
-      end      
+      end
     elseif enemy.dead_tics == enemy.max_tics or enemy.y == cfg.lvl_ypos - 8 then
       del(enemies.list, enemy)
       add_exp(enemy.x, enemy.y)
-    end      
-    if enemy.class == "chooper" 
+    end
+    if enemy.class == "chooper"
     or enemy.class == "jet"
     then
       if enemy.dir == 0 then
@@ -234,7 +244,7 @@ function update_enemies()
 	     if enemy.x < -8 then
 		      del(enemies.list, enemy)
 	     end
-	   end 
+	   end
   end
   end
 end
@@ -276,7 +286,7 @@ function update_explosions()
        end
        if p.age>p.maxage then
          del(e.parts,p)
-       end       
+       end
      end
      e.age+=1
      if e.age>e.maxage then
@@ -325,13 +335,13 @@ end
 function draw_enemies()
   for enemy in all(enemies.list) do
     if enemy.class == "chooper"
-    or enemy.class == "jet" 
+    or enemy.class == "jet"
     then
       local s=enemy.sprs[1]
       if tics % enemy.timer == 0 then s=enemy.sprs[2] end
 			   if enemy.dir == 0 then
         spr(s, enemy.x, enemy.y)
-      else 
+      else
         spr(s, enemy.x, enemy.y, 1, 1, true, false)
       end
     end
@@ -388,18 +398,19 @@ function otspr(n,col_outline,x,y,w,h,flip_x,flip_y)
   -- reset palette
   pal()
   -- draw final sprite
-  spr(n,x,y,w,h,flip_x,flip_y)	
+  spr(n,x,y,w,h,flip_x,flip_y)
 end
 
 function draw_explosions()
   for e in all(ex_emitters) do
     for p in all(e.parts) do
       circfill(p.x,p.y,p.rad,p.c)
-      circfill(p.x+e.offset.x,p.y+e.offset.y,p.rad-3,0)                                       
-      circ(p.x+(cos(rnd())*5),p.y+(sin(rnd())*5),1,0)                                                       
+      circfill(p.x+e.offset.x,p.y+e.offset.y,p.rad-3,0)
+      circ(p.x+(cos(rnd())*5),p.y+(sin(rnd())*5),1,0)
      end
   end
 end
+
 __gfx__
 01230000008008000080080000000000000000000000000000000000000000000000000000000000000000000055660000665500000000000000000000000000
 45670000006006000060060000000000677677600557550000000000dd000000dd0000000000000000000000cc55600000065500000000000000000000000000
