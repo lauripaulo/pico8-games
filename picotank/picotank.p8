@@ -80,7 +80,7 @@ function add_exp(x,y)
     age=0,
     maxage=25
   }
-  for i=0,5 do
+  for i=0,7 do
     add_exp_part(e)
   end
   add(ex_emitters,e)
@@ -93,7 +93,7 @@ function add_exp_part(e)
     rad=0,
     age=0,
     maxage=5+rnd(10),
-    c=rnd({15,8,9,10})
+    c=rnd({8,9,10})
    }
    add(e.parts,p)
 end
