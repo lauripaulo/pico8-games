@@ -48,8 +48,6 @@ function _init()
     ysize=16
   }
   ex_emitters={}
-  add(enemies.list, create_enemy())
-  add(enemies.list, create_enemy())
 end
 
 function makelevel(level)
@@ -98,15 +96,15 @@ function add_exp_part(e)
    add(e.parts,p)
 end
 
-function create_enemy()
+function create_enemy(typ)
   local start_y=flr(rnd(80))
   local enemy=nil
-  typ=flr(rnd(2))
-  printh(typ)
-  if typ == 1 then
+  if typ == "chooper" then
   	 enemy=makechooper(start_y)
-  else
+  elseif typ == "jet" then
   	 enemy=makejet(start_y)
+  else
+    enemy=makechooper(start_y)
   end
   enemy.dir=flr(rnd(2))
   if enemy.dir == 0 then
@@ -127,7 +125,7 @@ function makechooper(start_y)
     sprs={4, 5},
     timer=2,
     veloc=rnd(2) + 1,
-    yveloc=0,
+    yveloc=1,
     dir=nil,
     dead=false,
     dead_tics=0,
@@ -146,7 +144,7 @@ function makejet(start_y)
     sprs={7, 8},
     timer=3,
     veloc=rnd(3) + 1,
-    yveloc=0,
+    yveloc=2,
     dir=nil,
     dead=false,
     dead_tics=0,
@@ -204,9 +202,10 @@ function update_stats(dead)
 end
 
 function update_level()
-  if #enemies.list == 0 then
-    add(enemies.list, create_enemy())
-    add(enemies.list, create_enemy())
+  if #enemies.list < level.maxparallel then
+    local typ = rnd(level.enemytypes)
+    add(dbg, "spawn:"..typ)
+    add(enemies.list, create_enemy(typ))
   end
 end
 
@@ -321,14 +320,14 @@ function draw_map()
     camera()
   end
   map(tilemap.x, tilemap.y, 0, 0, tilemap.xsize, tilemap.ysize)
-  add(dbg, "player x:"..player.x)
+  --add(dbg, "player x:"..player.x)
 end
 
 function print_debug()
   camera()
   local i=1
   for debug_info in all(dbg) do
-    print("dbg"..i..":"..debug_info, 8, 32, 8)
+    print("dbg"..i..":"..debug_info, 0, 8, 8)
     i=i + 1
   end
   dbg={}
