@@ -307,6 +307,7 @@ function _draw()
   draw_shots()
   draw_explosions()
   print_debug()
+  draw_stats()
 end
 
 function draw_map()
@@ -324,12 +325,18 @@ function draw_map()
 end
 
 function print_debug()
+  camera()
   local i=1
   for debug_info in all(dbg) do
-    print("dbg"..i..":"..debug_info, player.x, 0, 8)
+    print("dbg"..i..":"..debug_info, 8, 32, 8)
     i=i + 1
   end
   dbg={}
+end
+
+function draw_stats()
+  camera()
+  print("points: "..player.points, 0, 0, 10)
 end
 
 function draw_enemies()
