@@ -41,12 +41,6 @@ function _init()
     miny=0,
     maxy=256 - 8
   }
-  tilemap={
-    x=0,
-    y=0,
-    xsize=32,
-    ysize=16
-  }
   ex_emitters={}
 end
 
@@ -61,7 +55,13 @@ function makelevel(level)
 		    maxvel=1.5,
  	    enemies=20,
  	    shot_enemies=0,
- 	    maxparallel=2
+ 	    maxparallel=2,
+      tilemap={
+        x=0,
+        y=0,
+        xsize=32,
+        ysize=16
+      }
 		  }
 	 end
 	 return cfg
@@ -319,7 +319,11 @@ function draw_map()
   else
     camera()
   end
-  map(tilemap.x, tilemap.y, 0, 0, tilemap.xsize, tilemap.ysize)
+  local mx=level.tilemap.x
+  local my=level.tilemap.y
+  local xsize=level.tilemap.xsize
+  local ysize=level.tilemap.ysize
+  map(mx, my, 0, 0, xsize, ysize)
   --add(dbg, "player x:"..player.x)
 end
 
