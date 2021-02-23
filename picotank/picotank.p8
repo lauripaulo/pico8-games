@@ -14,10 +14,10 @@ function _init()
   up=2
   down=3
   tics=0
+  points=0
   dbg={}
 
   cfg={
-    levels={},
     lvl_ypos=15 * 8,
     playspr={1, 2},
     terrspr={48, 49, 50},
@@ -32,8 +32,11 @@ function _init()
     x=0, 
     y=14 * 8, 
     accel=1.5, 
-    shots={}
+    shots={},
+    points=0,
+    shotdown=0    
   }
+  level=makelevel(1)
   enemies={
     list={},
     minx=-16,
@@ -50,6 +53,23 @@ function _init()
   ex_emitters={}	
   add(enemies.list, create_enemy())
   add(enemies.list, create_enemy())
+end
+
+function makelevel(level)
+  local cfg = nil
+ 	if level == 1 then
+		  cfg={
+		    enemytypes={
+		      "chopper",
+		      "jet"
+		    },
+		    maxvel=1.5,
+ 	    enemies=20,
+ 	    shotenemies=0,
+ 	    maxparallel=2
+		  } 
+	 end
+	 return cfg
 end
 -->8
 -- common 
@@ -83,11 +103,28 @@ end
 
 function create_enemy()
   local start_y=flr(rnd(80))
-  local enemy={
+  local enemy=nil
+  typ=rnd(#level.enemytypes)
+  if typ == 1 then
+  	 enemy=makechooper(start_y)
+  else
+  	 enemy=makejet(start_y)
+  end
+  enemy.dir=flr(rnd(2))
+  if enemy.dir == 0 then
+    enemy.x=-8
+  else
+    enemy.x=256 + 8
+  end
+  return enemy
+end
+
+function makechooper(start_y)
+  return {
     x=nil,
     y=start_y,
     shot=false,
-    type="chooper",
+    class="chooper",
     sprs={4, 5},
     timer=2,
     veloc=rnd(2) + 1,
@@ -98,13 +135,24 @@ function create_enemy()
     explspr=1,
     max_tics=20 -- how much time it takes to disapear.
   }
-  enemy.dir=flr(rnd(2))
-  if enemy.dir == 0 then
-    enemy.x=-8
-  else
-    enemy.x=256 + 8
-  end
-  return enemy
+end
+
+function makejet(start_y)
+  return {
+    x=nil,
+    y=start_y,
+    shot=false,
+    class="jet",
+    sprs={7, 8},
+    timer=3,
+    veloc=rnd(3) + 1,
+    yveloc=0,
+    dir=nil,
+    dead=false,
+    dead_tics=0,
+    explspr=1,
+    max_tics=15 -- how much time it takes to disapear.
+  }
 end
 
 -->8
@@ -173,19 +221,21 @@ function update_enemies()
       del(enemies.list, enemy)
       add_exp(enemy.x, enemy.y)
     end      
-    if enemy.type == "chooper" then
+    if enemy.class == "chooper" 
+    or enemy.class == "jet"
+    then
       if enemy.dir == 0 then
         enemy.x=enemy.x + enemy.veloc
         if enemy.x > 256 + 8 then
-		  del(enemies.list, enemy)
-	    end
-      else
-	    enemy.x=enemy.x - enemy.veloc
-	    if enemy.x < -8 then
-		  del(enemies.list, enemy)
-	    end
-	  end 
-    end
+    		  del(enemies.list, enemy)
+	     end
+    else
+	     enemy.x=enemy.x - enemy.veloc
+	     if enemy.x < -8 then
+		      del(enemies.list, enemy)
+	     end
+	   end 
+  end
   end
 end
 
@@ -274,7 +324,9 @@ end
 
 function draw_enemies()
   for enemy in all(enemies.list) do
-    if enemy.type == "chooper" then
+    if enemy.class == "chooper"
+    or enemy.class == "jet" 
+    then
       local s=enemy.sprs[1]
       if tics % enemy.timer == 0 then s=enemy.sprs[2] end
 			   if enemy.dir == 0 then
