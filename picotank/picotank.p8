@@ -95,7 +95,19 @@ function add_exp_part(e)
 end
 
 function create_enemy(typ)
-  local start_y=flr(rnd(80))
+  local start_y = flr(rnd(70)) + 10
+  local noyfree = true
+  while noyfree do
+    noyfree = false
+    for enemy in all(enemies.list) do
+      if start_y > enemy.y - 8
+      and start_y < enemy.y + 8 then
+        noyfree = true
+        start_y = flr(rnd(70)) + 10
+      end
+    end
+  end
+  printh("Y free found: "..start_y)
   local enemy=nil
   if typ == "chooper" then
   	 enemy=makechooper(start_y)
