@@ -14,16 +14,6 @@ function _init()
   points=0
   dbg={}
 
-  cfg={
-    lvl_ypos=15 * 8,
-    playspr={1, 2},
-    terrspr={48, 49, 50},
-    shotspr={17, 18},
-    explspr={55, 56, 57, 58},
-    shot_timer=5,
-    max_shots=4,
-    shot_veloc=3
-  }
   player={
     spr={1, 2},
     x=60,
@@ -51,18 +41,26 @@ function makelevel(level)
 		    enemytypes={
 		      "chopper",
 		      "jet"
-		    },
-		    maxvel=1.5,
- 	    enemies=20,
- 	    shot_enemies=0,
- 	    maxparallel=2,
+      },
+      lvl_ypos=15 * 8,
+      playspr={1, 2},
+      terrspr={48, 49, 50},
+      shotspr={17, 18},
+      explspr={55, 56, 57, 58},
+      shot_timer=5,
+      max_shots=4,
+      shot_veloc=3,
+      maxvel=1.5,
+      enemies=20,
+      shot_enemies=0,
+      maxparallel=2,
       tilemap={
         x=0,
         y=0,
         xsize=32,
         ysize=16
       }
-		  }
+    }
 	 end
 	 return cfg
 end
@@ -222,11 +220,11 @@ function update_enemies()
         enemy.yveloc=5
       end
       enemy.y=enemy.y + enemy.yveloc
-      if enemy.y > cfg.lvl_ypos - 8 then
-         enemy.y=cfg.lvl_ypos - 8
+      if enemy.y > level.lvl_ypos - 8 then
+         enemy.y=level.lvl_ypos - 8
          enemy.dead_tics=enemy.max_tics
       end
-    elseif enemy.dead_tics == enemy.max_tics or enemy.y == cfg.lvl_ypos - 8 then
+    elseif enemy.dead_tics == enemy.max_tics or enemy.y == level.lvl_ypos - 8 then
       del(enemies.list, enemy)
       add_exp(enemy.x, enemy.y)
     end
@@ -256,8 +254,8 @@ function update_player()
   end
   if btn(2) then
     -- shot timer
-    if tics % cfg.shot_timer == 0 then
-      if #player.shots < cfg.max_shots then
+    if tics % level.shot_timer == 0 then
+      if #player.shots < level.max_shots then
         shot={x=player.x, y=player.y - 4}
         add(player.shots, shot)
       end
@@ -267,7 +265,7 @@ end
 
 function update_shots()
   for shot in all(player.shots) do
-    shot.y=shot.y - cfg.shot_veloc
+    shot.y=shot.y - level.shot_veloc
     if (shot.y < -8) then del(player.shots, shot) end
   end
 end
@@ -363,7 +361,7 @@ function draw_enemies()
           enemy.explspr=enemy.explspr + 1
         end
       end
-      local s=cfg.explspr[enemy.explspr]
+      local s=level.explspr[enemy.explspr]
       otspr(s, 0, enemy.x, enemy.y, 1, 1, false, false)
     end
   end
@@ -371,23 +369,23 @@ end
 
 function draw_shots()
   for shot in all(player.shots) do
-    local s=cfg.shotspr[1]
-    if shot.y % 4 == 0 then s=cfg.shotspr[2] end
+    local s=level.shotspr[1]
+    if shot.y % 4 == 0 then s=level.shotspr[2] end
       spr(s, shot.x, shot.y)
   end
 end
 
 function draw_player()
-  local s=cfg.playspr[1]
-  if player.x % 3 == 0 then s=cfg.playspr[2] end
+  local s=level.playspr[1]
+  if player.x % 3 == 0 then s=level.playspr[2] end
   otspr(s, 0, player.x, player.y, 1, 1, false, false)
 end
 
 function draw_terrain()
   local x=0
-  local tiles=cfg.levels[1]
+  local tiles=level.levels[1]
   for t in all(tiles) do
-    spr(t, x, cfg.lvl_ypos)
+    spr(t, x, level.lvl_ypos)
     x=x + 8
   end
 end
