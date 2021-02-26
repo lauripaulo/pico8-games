@@ -95,15 +95,16 @@ function add_exp_part(e)
 end
 
 function create_enemy(typ)
-  local start_y = flr(rnd(70)) + 10
+  local start_y = nil
   local noyfree = true
   while noyfree do
+    start_y = flr(rnd(70)) + 10
     noyfree = false
     for enemy in all(enemies.list) do
       if start_y > enemy.y - 8
       and start_y < enemy.y + 8 then
         noyfree = true
-        start_y = flr(rnd(70)) + 10
+        break
       end
     end
   end
