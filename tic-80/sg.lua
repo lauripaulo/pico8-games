@@ -4,7 +4,7 @@
 -- script: lua
 --
 -- Game goal: combine magic gems to
--- create spells, using color and
+-- create spells,using color and
 -- position. Each gem can have
 -- different colors.
 --
@@ -12,13 +12,17 @@
 -- with the same color.
 -- When you fill a line you destroy
 -- if and the spell is cast.
-
 -- sides
 RIGHT=1
 LEFT=2
 UP=3
 DOWN=4
-SIDES={"RIGHT","LEFT","UP","DOWN"}
+SIDES={
+ "RIGHT",
+ "LEFT",
+ "UP",
+ "DOWN"
+}
 
 -- global timer
 timer=0
@@ -26,26 +30,26 @@ timer=0
 -- gem: 1,2
 --      3,4
 gemTypes={
-	{1,1,1,1},
-	{1,1,1,0},
-	{0,1,1,1},
-	{1,1,0,1},
-	{1,0,1,1}
+ {1,1,1,1},
+ {1,1,1,0},
+ {0,1,1,1},
+ {1,1,0,1},
+ {1,0,1,1}
 }
 
 -- Game State
 gmState={
  activeGem=false,
-	currgem={0,0,0,0},
-	nextgem={0,0,0,0},
-	gemx=0,
-	gemy=0,
-	field={
-		cols=4*3,
-		lines=15,
-		drawx=8*16,
-		drawy=0,
- 	data={}
+ currgem={0,0,0,0},
+ nextgem={0,0,0,0},
+ gemx=0,
+ gemy=0,
+ field={
+  cols=4*3,
+  lines=15,
+  drawx=8*16,
+  drawy=0,
+  data={}
  }
 }
 
@@ -53,208 +57,192 @@ function InitField(fld)
  trace("InitField:")
  local pos=1
  fld.data={}
-	for i=1,fld.lines do
-		for j=1,fld.cols do
-			fld.data[pos]=0
-			--trace(">pos:"..pos.." i,j="..i..","..j)
-			pos=pos+1
-		end
-	end
-	return fld
+ for i=1,fld.lines do
+  for j=1,fld.cols do
+   fld.data[pos]=0
+   -- trace(">pos:"..pos.." i,j="..i..","..j)
+   pos=pos+1
+  end
+ end
+ return fld
 end
 
 function GetDataPos(x,y,gmState)
-	local pos=(y-1)*gmState.field.cols
-	pos=pos+x
-	return pos
+ local pos=(y-1)*gmState.field.cols
+ pos=pos+x
+ return pos
 end
 
 function NextGem(types)
-	local idx=math.random(#types)
-	trace("NextGem:"..idx)
-	return types[idx]
+ local idx=math.random(#types)
+ trace("NextGem:"..idx)
+ return types[idx]
 end
 
 function ClearGem(gmState)
  trace("ClearGem:")
  local fld=gmState.field
- local p=GetDataPos(gmState.gemx,gmState.gemy,gmState)
+ local p=GetDataPos(gmState.gemx,gmState.gemy,
+  gmState)
  local gem=gmState.currgem
- if gem[1]>0 then	fld.data[p]=0 end
+ if gem[1]>0 then fld.data[p]=0 end
  if gem[2]>0 then fld.data[p+1]=0 end
  if gem[3]>0 then fld.data[p+12]=0 end
- if gem[4]>0 then	fld.data[p+13]=0 end
+ if gem[4]>0 then fld.data[p+13]=0 end
 end
 
 function SetGem(gmState,x,y)
-	trace("SetGem:")
-	trace(">x,y:"..x..","..y)
-	local field=gmState.field
-	local gem=gmState.currgem
-	local p=GetDataPos(x,y,gmState)
-	if gem[1]>0 then
-		field.data[p]=gem[1]
-	end
-	if gem[2]>0 then
-		field.data[p+1]=gem[2]
-	end
-	if gem[3]>0 then
-		field.data[p+12]=gem[3]
-	end
-	if gem[4]>0 then
-		field.data[p+13]=gem[4]
-	end
-	gmState.gemx=x
-	gmState.gemy=y
+ trace("SetGem:")
+ trace(">x,y:"..x..","..y)
+ local field=gmState.field
+ local gem=gmState.currgem
+ local p=GetDataPos(x,y,gmState)
+ if gem[1]>0 then field.data[p]=gem[1] end
+ if gem[2]>0 then field.data[p+1]=gem[2] end
+ if gem[3]>0 then field.data[p+12]=gem[3] end
+ if gem[4]>0 then field.data[p+13]=gem[4] end
+ gmState.gemx=x
+ gmState.gemy=y
 end
 
 function PutNewGem(gmState,gem)
-	trace("PutNewGem:")
-	trace(">activeGem="..pbool(gmState.activeGem))
-	local field=gmState.field
+ trace("PutNewGem:")
+ trace(">activeGem="..pbool(gmState.activeGem))
+ local field=gmState.field
  trace(">data size:"..#field.data)
-	if not gmState.activeGem then
-		local gemx=7
-		local gemy=1
-		gmState.activeGem=true
-		gmState.currgem=gem
-		SetGem(gmState,gemx,gemy)
-	end
-	return gState
+ if not gmState.activeGem then
+  local gemx=7
+  local gemy=1
+  gmState.activeGem=true
+  gmState.currgem=gem
+  SetGem(gmState,gemx,gemy)
+ end
+ return gState
 end
 
 function DrawField(gState)
  local pos=1
-	local field=gState.field
-	for i=1,field.lines do
-		for j=1,field.cols do
-			local drawY=((i-1)*8)+field.drawy
-			local drawX=((j-1)*8)+field.drawx
-			local tile=field.data[pos]
-			if tile>0 then
-			 spr(tile,drawX,drawY,14,1,0,0,1,1)
-			else
-			 spr(20,drawX,drawY,0,1,0,0,1,1)
-			end
-			pos=pos+1
-		end
-	end
+ local field=gState.field
+ for i=1,field.lines do
+  for j=1,field.cols do
+   local drawY=((i-1)*8)+field.drawy
+   local drawX=((j-1)*8)+field.drawx
+   local tile=field.data[pos]
+   if tile>0 then
+    spr(tile,drawX,drawY,14,1,0,0,1,1)
+   else
+    spr(20,drawX,drawY,0,1,0,0,1,1)
+   end
+   pos=pos+1
+  end
+ end
 end
 
 function EvalCollision(x,y,side,gmState)
-	trace("EvalCollision:")
-	trace(">x,y:"..x..","..y)
+ trace("EvalCollision:")
+ trace(">x,y:"..x..","..y)
  local res=false
-	local p=GetDataPos(x,y,gmState)
-	local f=gmState.field
-	local cgem=gmState.currgem
-	local ngem={
-		f.data[p],
-		f.data[p+1],
-		f.data[p+12],
-		f.data[p+13]
-	}
-	if p+13>#f.data then
-		res=true
-	else
-		for i=1,#ngem do
-			if ngem[i]>0 then
-				if cgem[i]>0 then
-					res=true
-					break
-				end
-			end
-		end
-	end
-	trace(">res:"..pbool(res))
-	return res
+ local p=GetDataPos(x,y,gmState)
+ local f=gmState.field
+ local cgem=gmState.currgem
+ local ngem={
+  f.data[p],f.data[p+1],f.data[p+12],
+  f.data[p+13]
+ }
+ if p+13>#f.data then
+  res=true
+ else
+  for i=1,#ngem do
+   if ngem[i]>0 then
+    if cgem[i]>0 then
+     res=true
+     break
+    end
+   end
+  end
+ end
+ trace(">res:"..pbool(res))
+ return res
 end
 
 function MoveSide(side,gmState)
-	trace("MoveSide:"..pbool(gmState.activeGem))
-	trace(">side:"..SIDES[side])
-	if gmState.activeGem then
-		local y=gmState.gemy
-		local x=gmState.gemx
-		ClearGem(gmState)
-		if side==LEFT and x>1 then
-			x=x-1
-		elseif side==RIGHT and x<gmState.field.cols-1 then
-		 x=x+1
-		end
-		if EvalCollision(x,y,side,gmState) then
-		 SetGem(gmState,gmState.gemx,gmState.gemy)
-			trace(">colision!")
-		else
-		 SetGem(gmState,x,y)
-		end
-	end
+ trace("MoveSide:"..pbool(gmState.activeGem))
+ trace(">side:"..SIDES[side])
+ if gmState.activeGem then
+  local y=gmState.gemy
+  local x=gmState.gemx
+  ClearGem(gmState)
+  if side==LEFT and x>1 then
+   x=x-1
+  elseif side==RIGHT and x<gmState.field.cols-1 then
+   x=x+1
+  end
+  if EvalCollision(x,y,side,gmState) then
+   SetGem(gmState,gmState.gemx,gmState.gemy)
+   trace(">colision!")
+  else
+   SetGem(gmState,x,y)
+  end
+ end
 end
 
 function MoveDown(gmState)
-	trace("MoveDown:"..pbool(gmState.activeGem))
-	if gmState.activeGem then
-		local x=gmState.gemx
-		local y=gmState.gemy+1
-		ClearGem(gmState)
-		if EvalCollision(x,y,DOWN,gmState) then
-		 SetGem(gmState,gmState.gemx,gmState.gemy)
-			gmState.activeGem=false
- 		local gem=NextGem(gemTypes)
-			PutNewGem(gmState,gem)
-		else
-		 SetGem(gmState,x,y)
-		end
-	else
-		local gem=NextGem(gemTypes)
-		gmState=PutNewGem(gmState,gem)
-	end
+ trace("MoveDown:"..pbool(gmState.activeGem))
+ if gmState.activeGem then
+  local x=gmState.gemx
+  local y=gmState.gemy+1
+  ClearGem(gmState)
+  if EvalCollision(x,y,DOWN,gmState) then
+   SetGem(gmState,gmState.gemx,gmState.gemy)
+   gmState.activeGem=false
+   local gem=NextGem(gemTypes)
+   PutNewGem(gmState,gem)
+  else
+   SetGem(gmState,x,y)
+  end
+ else
+  local gem=NextGem(gemTypes)
+  gmState=PutNewGem(gmState,gem)
+ end
 end
 
 function Start()
-	trace("=-=- Start() -=-=")
-	gmState.field=InitField(gmState.field)
-	MoveDown(gmState)
+ trace("=-=- Start() -=-=")
+ gmState.field=InitField(gmState.field)
+ MoveDown(gmState)
 end
 
 function Debug(gmState)
-	local t="gemx,gemy:"..gmState.gemx..","..gmState.gemy
-	print(t,2,2,15)
-	t="activeGem:"..pbool(gmState.activeGem)
+ local t="gemx,gemy:"..gmState.gemx..","..gmState.gemy
+ print(t,2,2,15)
+ t="activeGem:"..pbool(gmState.activeGem)
  print(t,2,10,15)
- local pos=GetDataPos(gmState.gemx,gmState.gemy,gmState)
+ local pos=GetDataPos(gmState.gemx,
+  gmState.gemy,gmState)
  print(pos,2,18,15)
 end
 
 function TIC()
 
- if btnp(1) then
-		MoveDown(gmState)
- end
-	--if btn(0) then y=y-1 end
-	if btnp(2) then
-		MoveSide(LEFT,gmState)
-	end
-	if btnp(3) then
-		MoveSide(RIGHT,gmState)
-	end
+ if btnp(1) then MoveDown(gmState) end
+ -- if btn(0) then y=y-1 end
+ if btnp(2) then MoveSide(LEFT,gmState) end
+ if btnp(3) then MoveSide(RIGHT,gmState) end
 
-	cls(13)
-	--spr(1+t%60//30*2,x,y,14,3,0,0,2,2)
-	--print("HELLO WORLD!",84,84)
-	timer=timer+1
-	
-	if timer%60==0 then
-		MoveDown(gmState)
-	end
+ cls(13)
+ -- spr(1+t%60//30*2,x,y,14,3,0,0,2,2)
+ -- print("HELLO WORLD!",84,84)
+ timer=timer+1
 
-	DrawField(gmState)
-	Debug(gmState)
+ if timer % 60==0 then MoveDown(gmState) end
+
+ DrawField(gmState)
+ Debug(gmState)
 
 end
 
 function pbool(bool)
-	return bool and "true" or "false"
+ return bool and "true" or "false"
 end
 
 Start()
