@@ -34,12 +34,11 @@ gemTypes={
  {1,1,1,0},
  {0,1,1,1},
  {1,1,0,1},
- {1,0,1,0},
- {0,1,0,1}
+ {1,0,1,1}
 }
 
 -- Game State
-gmState={
+gameState={
  activeGem=false,
  currgem={0,0,0,0},
  nextgem={0,0,0,0},
@@ -260,7 +259,7 @@ function MoveDown(gmState)
  end
 end
 
-function Start()
+function Start(gmState)
  trace("=-=- Start() -=-=")
  gmState.field=InitField(gmState.field)
  local gem=NextGem(gemTypes)
@@ -293,22 +292,27 @@ function Debug(gmState)
 end
 
 function TIC()
-
- if btnp(1) then MoveDown(gmState) end
- -- if btn(0) then y=y-1 end
- if btnp(2) then MoveSide(LEFT,gmState) end
- if btnp(3) then MoveSide(RIGHT,gmState) end
-
  cls(13)
- -- spr(1+t%60//30*2,x,y,14,3,0,0,2,2)
- -- print("HELLO WORLD!",84,84)
+
+ if btnp(1) then 
+ 	MoveDown(gameState) 
+ end
+ -- if btn(0) then y=y-1 end
+ if btnp(2) then 
+ 	MoveSide(LEFT,gameState) 
+ end
+ if btnp(3) then 
+ 	MoveSide(RIGHT,gameState) 
+ end
+
  timer=timer+1
+ if timer%gameState.speed==0 then 
+ 	MoveDown(gameState) 
+ end
 
- if timer%gmState.speed==0 then MoveDown(gmState) end
-
- DrawUI(gmState)
- DrawField(gmState)
- Debug(gmState)
+ DrawUI(gameState)
+ DrawField(gameState)
+ Debug(gameState)
 
 end
 
@@ -316,7 +320,7 @@ function pbool(bool)
  return bool and "true" or "false"
 end
 
-Start()
+Start(gameState)
 -- <TILES>
 -- 001:0000000003333320033333200333332003333320033333200222222000000000
 -- 002:0000000000033000003332000333332003333320003332000002200000000000
