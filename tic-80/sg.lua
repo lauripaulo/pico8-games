@@ -138,6 +138,40 @@ function DrawField(gState)
  end
 end
 
+function RemoveLines(filled,gmState)
+ trace("RemoveLines:")
+ local field=gmState.field
+ for i=1,#filled do
+  local ln=filled[i]
+  local pos=GetDataPos(1,ln,gmState)
+ 	trace(">Remove#"..ln)
+  for j=pos,field.cols+pos do
+   table.remove(field.data,j)
+   table.insert(field.data,1,0)
+  	--trace(">>pos#"..j)
+  end
+ end 
+end
+
+function EvalFillLines(gmState)
+ trace("EvalFillLines:")
+ local completed={}
+ local pos=1
+ local field=gmState.field
+ for i=1,field.lines do
+  local lineSum=0
+  local pos=GetDataPos(1,i,gmState)
+  for j=1,field.cols do
+   lineSum=lineSum+field.data[pos+(j-1)]
+  end
+  if lineSum>=field.cols then
+   trace(">Line#"..i.." filled!")
+   table.insert(completed,i)
+  end
+ end
+ return completed
+end
+
 function EvalCollision(x,y,side,gmState)
  trace("EvalCollision:")
  trace(">x,y:"..x..","..y)
@@ -194,8 +228,12 @@ function MoveDown(gmState)
   ClearGem(gmState)
   if EvalCollision(x,y,DOWN,gmState) then
    SetGem(gmState,gmState.gemx,gmState.gemy)
-   gmState.activeGem=false
+		 local filled=EvalFillLines(gmState)
    local gem=NextGem(gemTypes)
+			if #filled>0 then
+				RemoveLines(filled,gmState)
+			end
+   gmState.activeGem=false
    PutNewGem(gmState,gem)
   else
    SetGem(gmState,x,y)
