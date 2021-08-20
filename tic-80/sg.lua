@@ -249,7 +249,8 @@ function MoveDown(gmState)
 				RemoveLines(filled,gmState)
 			end
    gmState.activeGem=false
-   PutNewGem(gmState,gem)
+   PutNewGem(gmState,gmState.nextgem)
+   gmState.nextgem=gem
   else
    SetGem(gmState,x,y)
   end
@@ -262,6 +263,8 @@ end
 function Start()
  trace("=-=- Start() -=-=")
  gmState.field=InitField(gmState.field)
+ local gem=NextGem(gemTypes)
+ gmState.nextgem=gem
  MoveDown(gmState)
 end
 
@@ -269,6 +272,13 @@ function DrawUI(gmState)
  map(0,0,30,17,0,0)
  print("Score: ",2,2,4)
  print(gmState.score,8,18,4)
+
+ -- next
+ print("Next:",8*10,2,4)
+ spr(gmState.nextgem[1],8*11,8*2,14,1,0,0,1,1)
+ spr(gmState.nextgem[2],8*12,8*2,14,1,0,0,1,1)
+ spr(gmState.nextgem[3],8*11,8*3,14,1,0,0,1,1)
+ spr(gmState.nextgem[4],8*12,8*3,14,1,0,0,1,1)
 end
 
 function Debug(gmState)
