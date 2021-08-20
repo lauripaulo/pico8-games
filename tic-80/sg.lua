@@ -34,7 +34,8 @@ gemTypes={
  {1,1,1,0},
  {0,1,1,1},
  {1,1,0,1},
- {1,0,1,1}
+ {1,0,1,0},
+ {0,1,0,1}
 }
 
 -- Game State
@@ -44,6 +45,9 @@ gmState={
  nextgem={0,0,0,0},
  gemx=0,
  gemy=0,
+ score=0,
+ speed=60,
+ ptsBase=100,
  field={
   cols=4*3,
   lines=15,
@@ -231,6 +235,8 @@ function MoveDown(gmState)
 		 local filled=EvalFillLines(gmState)
    local gem=NextGem(gemTypes)
 			if #filled>0 then
+				gmState.score=gmState.score+(gmState.ptsBase*#filled)
+				gmState.score=gmState.score+(gmState.ptsBase*(#filled-1))
 				RemoveLines(filled,gmState)
 			end
    gmState.activeGem=false
@@ -250,14 +256,18 @@ function Start()
  MoveDown(gmState)
 end
 
+function DrawUI(gmState)
+ print("Score: "..gmState.score,2,2,4)
+end
+
 function Debug(gmState)
  local t="gemx,gemy:"..gmState.gemx..","..gmState.gemy
- print(t,2,2,15)
+ print(t,2,20,15)
  t="activeGem:"..pbool(gmState.activeGem)
- print(t,2,10,15)
+ print(t,2,28,15)
  local pos=GetDataPos(gmState.gemx,
   gmState.gemy,gmState)
- print(pos,2,18,15)
+ print(pos,2,36,15)
 end
 
 function TIC()
@@ -272,9 +282,10 @@ function TIC()
  -- print("HELLO WORLD!",84,84)
  timer=timer+1
 
- if timer % 60==0 then MoveDown(gmState) end
+ if timer%gmState.speed==0 then MoveDown(gmState) end
 
  DrawField(gmState)
+ DrawUI(gmState)
  Debug(gmState)
 
 end
