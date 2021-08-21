@@ -32,9 +32,7 @@ timer=0
 gemTypes={
  {1,1,1,1},
  {1,1,1,0},
- {0,1,1,1},
- {1,1,0,1},
- {1,0,1,1}
+ {1,1,0,1}
 }
 
 -- Game State
@@ -80,6 +78,15 @@ function NextGem(types)
  local idx=math.random(#types)
  trace("NextGem:"..idx)
  return types[idx]
+end
+
+function RotateGem(gmState)
+ trace("RotateGem:")
+ ClearGem(gmState)
+ local gem=gmState.currgem
+ local last=table.remove(gem,#gem)
+ table.insert(gem,1,last)
+ SetGem(gmState,gmState.gemx,gmState.gemy)
 end
 
 function ClearGem(gmState)
@@ -297,7 +304,11 @@ function TIC()
  if btnp(1) then 
  	MoveDown(gameState) 
  end
- -- if btn(0) then y=y-1 end
+ 
+ if btnp(0) then
+  RotateGem(gameState)
+ end
+ 
  if btnp(2) then 
  	MoveSide(LEFT,gameState) 
  end
