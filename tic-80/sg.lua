@@ -301,10 +301,16 @@ function TIC()
     DrawField(gameState)
     Debug(gameState)
   elseif gameState.state == STATE_GAMEOVER then
-    print("GAME OVER", 50, 50)
+    --              1         2         3
+    --     123456789012345678901234567890
+    print("GAME OVER", 84, 60)
+    print("Press A (Z) to continue", 56,  70)
+    if btnp(4) then
+      gameState.state = STATE_INITIAL
+    end
   elseif gameState.state == STATE_INITIAL then
-    print("Press DOWN to start the game...", 40, 50)
-    if btnp(0) then gameState.state = STATE_RUNNING end
+    print("Press A (Z) to start the game...", 40, 50)
+    if btnp(4) then gameState.state = STATE_RUNNING end
     trace("[State:" .. gameState.state .. "]")
   end
 
