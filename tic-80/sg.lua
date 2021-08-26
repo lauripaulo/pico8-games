@@ -1,3 +1,7 @@
+-- title:  game title
+-- author: game developer
+-- desc:   short description
+-- script: lua
 -- title:  Simple Geometric Game
 -- author: lauri Laux
 -- desc:   Simple game to learn tic80
@@ -38,6 +42,7 @@ gameState = {
   gemx=0,
   gemy=0,
   score=0,
+  screen_score=0,
   speed=60,
   ptsBase=100,
   state=STATE_INITIAL,
@@ -267,7 +272,7 @@ end
 function DrawUI(gmState)
   map(0, 0, 30, 17, 0, 0)
   print("Score: ", 2, 2, 4)
-  print(gmState.score, 8, 18, 4)
+  print(gmState.screen_score, 8, 18, 4)
 
   -- next
   print("Next:", 8 * 10, 2, 4)
@@ -297,12 +302,16 @@ function TIC()
     if btnp(3) then MoveSide(RIGHT, gameState) end
     timer = timer + 1
     if timer % gameState.speed == 0 then MoveDown(gameState) end
+    if gameState.screen_score < gameState.score then
+      gameState.screen_score = int(gameState.screen_score + 1)
+    end
     DrawUI(gameState)
     DrawField(gameState)
     Debug(gameState)
   elseif gameState.state == STATE_GAMEOVER then
     --              1         2         3
     --     123456789012345678901234567890
+    gameState.screen_score = gameState.score
     print("GAME OVER", 84, 60)
     print("Press A (Z) to continue", 56,  70)
     if btnp(4) then
