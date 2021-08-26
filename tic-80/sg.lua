@@ -303,7 +303,7 @@ function TIC()
     timer = timer + 1
     if timer % gameState.speed == 0 then MoveDown(gameState) end
     if gameState.screen_score < gameState.score then
-      gameState.screen_score = int(gameState.screen_score + 1)
+      gameState.screen_score = gameState.screen_score + 1
     end
     DrawUI(gameState)
     DrawField(gameState)
@@ -332,14 +332,12 @@ end
 Start(gameState)
 
 -- <TILES>
--- 001:0000000003333320033333200333332003333320033333200222222000000000
--- 002:0000000005555560055555600555556005555560055555600666666000000000
--- 003:0000000009999980099999800999998009999980099999800888888000000000
--- 004:0000000005555560055665600556656005566560055555600666666000000000
--- 016:feeeeeefeeddddeeeddddddeeddfdddeedddfddeeddddddeeeddddeefeeeeeef
--- 017:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeffffffff
--- 018:eeeeeeefeeeeeeefeeeeeeefeeeeeeefeeeeeeefeeeeeeefeeeeeeefffffffff
--- 020:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+-- 001:0000000003333320033223200332232003322320033333200222222000000000
+-- 002:0000000005555560055665600556656005566560055555600666666000000000
+-- 003:0000000009999980099889800998898009988980099999800888888000000000
+-- 004:0000000004444430044334300443343004433430044444300333333000000000
+-- 006:feeeeeefeeddddeeeddddddeeddfdddeedddfddeeddddddeeeddddeefeeeeeef
+-- 020:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
 -- 021:000000000888888808888bbb08888bbb0888888808bb800008bb800008bb8000
 -- 022:0000000088888888bbb88bbbbbb88bbb88888888000000000000000000000000
 -- 023:0000000088888880bbb88880bbb88880888888800008bb800008bb800008bb80
@@ -395,3 +393,4 @@ Start(gameState)
 -- <PALETTE>
 -- 000:1a1c2c5d275db13e53ef7d57ffcd75a7f07038b76425717929366f3b5dc941a6f673eff7f4f4f494b0c2566c86333c57
 -- </PALETTE>
+
