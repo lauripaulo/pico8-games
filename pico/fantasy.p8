@@ -10,11 +10,13 @@ msgs = {}
 typ_player = 1
 typ_enemy = 2
 typ_npc = 3
-
 state_start_screen = 1
 state_playing = 2
 state_game_over = 3
 state_win = 4
+
+-- player
+player = nil
 
 -- state machine
 function change_state(_state)
@@ -22,18 +24,22 @@ function change_state(_state)
     _init = start_screen_init
     _update = start_screen_update
     _draw = start_screen_draw
+    start_screen_init()
   elseif _state == state_playing then
     _init = game_init
     _update = game_update
     _draw = game_draw
+    game_init()
   elseif _state == state_game_over then
     _init = game_over_init
     _update = game_over_update
     _draw = game_over_draw
+    game_over_init()
   elseif _state == state_win then
     _init = win_init
     _update = win_update
     _draw = win_draw
+    win_init()
   end
 end
 
@@ -49,6 +55,14 @@ end
 
 -- playing game
 function game_init()
+  player = create_obj(64, 64, typ_player, "Zeno")
+  player.atk = 55
+  player.def = 45
+  player.hp = 20
+  player.max_hp = 20
+  player.gold = 0
+  player.exp = 0
+  player.lvl = 1
 end
 
 function game_update()
