@@ -102,7 +102,7 @@ function roll_gold(_obj)
 end
 
 -- create a new object
-function create_obj(_x, _y, _type)
+function create_obj(_x, _y, _type, _name)
   return {
     x = _x,
     y = _y,
@@ -118,7 +118,7 @@ function create_obj(_x, _y, _type)
     gold = 0,
     exp = 0,
     lvl = 1,
-    name = "",
+    name = _name,
     spells = {},
     status = {},
     dead = false
