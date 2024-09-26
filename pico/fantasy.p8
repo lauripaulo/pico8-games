@@ -7,15 +7,50 @@ flts = {}
 msgs = {}
 
 -- game constants
-const_typ_player = 1
-const_typ_enemy = 2
-const_typ_npc = 3
+typ_player = 1
+typ_enemy = 2
+typ_npc = 3
+
+state_start_screen = 1
+state_playing = 2
+state_game_over = 3
+state_win = 4
+
+-- initial game state
+change_state(state_start_screen)
 
 -- state machine
-_init = game_init
-_update = game_update
-_draw = game_draw
+function change_state(_state)
+    if _state == state_start_screen then
+        _init = start_screen_init
+        _update = start_screen_update
+        _draw = start_screen_draw
+    elseif _state == state_playing then
+        _init = game_init
+        _update = game_update
+        _draw = game_draw
+    elseif _state == state_game_over then
+        _init = game_over_init
+        _update = game_over_update
+        _draw = game_over_draw
+    elseif _state == state_win then
+        _init = win_init
+        _update = win_update
+        _draw = win_draw
+    end
+end
 
+-- title screen
+function start_screen_init()
+end
+
+function start_screen_update()
+end
+
+function start_screen_draw()
+end
+
+-- playing game
 function game_init()
 end
 
@@ -23,6 +58,26 @@ function game_update()
 end
 
 function game_draw()
+end
+
+-- game over
+function game_over_init()    
+end
+
+function game_over_update()
+end
+
+function game_over_draw()
+end
+
+-- win game!!!
+function win_init()
+end
+
+function win_update()
+end
+
+function win_draw()
 end
 
 -- d6 dices
