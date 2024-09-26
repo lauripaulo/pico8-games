@@ -48,9 +48,15 @@ function start_screen_init()
 end
 
 function start_screen_update()
+  if btnp(4) then
+    change_state(state_playing)
+  end
 end
 
 function start_screen_draw()
+  cls()
+  printo("fantasy game", col2x(2), row2y(2), 7)
+  printo("-- press z to start --", col2x(2), row2y(10), 7)
 end
 
 -- playing game
@@ -63,22 +69,39 @@ function game_init()
   player.gold = 0
   player.exp = 0
   player.lvl = 1
+
+  addmsg("welcome to the game!", 3, 2)
+  addmsg("game loop working ok.", 5, 3)
 end
 
 function game_update()
+  if btnp(5) then
+    change_state(state_game_over)
+  end
+  update_messages()
 end
 
 function game_draw()
+  cls()
+  printo("playing game...", col2x(2), row2y(2), 7)
+  draw_messages(player)
 end
 
 -- game over
 function game_over_init()
+  game_over_timer = 0
 end
 
 function game_over_update()
+  game_over_timer += 1
+  if game_over_timer == 120 then
+    change_state(state_start_screen)
+  end
 end
 
 function game_over_draw()
+  cls()
+  printo("game over", col2x(2), row2y(2), 7)
 end
 
 -- win game!!!
@@ -247,6 +270,22 @@ function printo(txt, x, y, colr)
     print(txt, x, y + i - 2, 0)
   end
   print(txt, x, y, colr)
+end
+
+function col2x(col)
+  return col * 8
+end
+
+function x2col(x)
+  return flr(x / 8)
+end
+
+function row2y(row)
+  return row * 8
+end
+
+function y2row(y)
+  return flr(y / 8)
 end
 
 -->8
