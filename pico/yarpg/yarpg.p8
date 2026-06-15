@@ -49,8 +49,8 @@ function game_init()
 		level=1,
 		atack=2,
 		defense=2,
-		maxhp=3,
-		hp=3
+		maxhp=4,
+		hp=4
 	}
 	
 	state={
@@ -145,6 +145,8 @@ function eval_playermove()
 				found_key(me.tomx,me.tomy)
 			elseif map_collide(me,3) then
 				found_chest(me.tomx,me.tomy)
+			elseif map_collide(me,5) then
+				found_npc(me.tomx,me.tomy)
 			else
 				sfx(0)
 			end
@@ -204,6 +206,14 @@ function found_chest(mlx,mly)
 	else 
 		-- already looted
 		sfx(0)
+	end
+end
+
+function found_npc(mlx,mly)
+	local npc=mget(mlx,mly)
+	if npc==64 then
+		addmsg("it's dangerous to go alone.",1,12)
+		sfx(4)
 	end
 end
 
@@ -488,13 +498,10 @@ function spawmobs()
 	if state.spawmobs then
 		mob=newmob(7,1,"skeleton")
 		add(mobs,mob)
-		addflt(mob," !",10)
 		mob=newmob(4,10,"ooze")
 		add(mobs,mob)
-		addflt(mob," !",10)
 		mob=newmob(14,6,"zombie")
 		add(mobs,mob)
-		addflt(mob," !",10)
 		state.spawmobs=false
 	end
 end
@@ -520,18 +527,20 @@ function mob_hit(mob,obj)
 end
 
 function think(mob)
-	-- 2/3 chance: chase player via bfs
-	if flr(rnd(3))>0 then
-		local step=findpath(
-			mob.mapx,mob.mapy,
-			me.mapx,me.mapy,15)
-		if step then
-			mob.tomx=step.x
-			mob.tomy=step.y
-			return
+	local step=findpath(
+		mob.mapx,mob.mapy,
+		me.mapx,me.mapy,15)
+	if step then
+		mob.tomx=step.x
+		mob.tomy=step.y
+		if not mob.chasing then
+			addflt(mob," !",10)
+			mob.chasing=true
 		end
+		return
 	end
 	-- 1/3 or unreachable: random wander
+	mob.chasing=false
 	local valid={}
 	for ds in all(directions) do
 		mob.tomx=ds[1]+mob.mapx
@@ -564,7 +573,8 @@ function newmob(mx,my,typ)
 		flipx=false,
 		moving=false,
 		pxmoved=0,
-		id=mobid
+		id=mobid,
+		chasing=false
 	}
 	if typ=="ooze" then
 		mob.sprs={201,202,203}
