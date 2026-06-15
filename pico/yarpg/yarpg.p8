@@ -11,7 +11,7 @@ function menu_init()
 	_draw = menu_draw
 	_update = menu_update
 	mdelay=30
-	starprs=false
+	startprs=false
 	music(0)
 end
 
@@ -440,7 +440,7 @@ function findpath(ox,oy,tx,ty,depth)
 		printh("->found #"..#cs.." cells")
 		for p in all(cs) do
 			local nc=newcell(
-				p.x,p.y,curr
+				p.x,p.y,cur
 			)
 			equeue(minfo,nc)
 			printh("added to m info->p.x:"..p.x.." p.y:"..p.y)
@@ -830,7 +830,7 @@ end
 function draw_mobs()
 	-- moba
 	for mob in all(mobs) do
-		anispr(mob)
+		--anispr(mob) -- já é chamado em outro lugar.
 		cspr=mob.sprs[mob.cspr]
 		otspr(cspr,0,mob.x,mob.y,1,1,mob.flipx,false)
 	end
