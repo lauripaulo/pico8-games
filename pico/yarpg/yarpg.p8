@@ -47,8 +47,8 @@ function game_init()
 		gold=0,
 		bpress=false,
 		level=1,
-		atack=2,
-		defense=2,
+		atack=5,
+		defense=5,
 		maxhp=4,
 		hp=4
 	}
@@ -383,7 +383,7 @@ function attack(obj,target)
 			colr=8
 			sprn=43
 		end
-		local dmg=max(1,result)
+		local dmg=max(1,obj.attack)
 		addflt(target,"-"..dmg,colr)
 		addmsg(obj.name.." attack hit!",t,8)
 		target.hp-=dmg
