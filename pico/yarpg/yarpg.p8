@@ -130,7 +130,7 @@ function update_player()
 		me.bpress = false
 	end
 		
-	return bpress
+	return me.bpress
 end
 
 --
@@ -234,11 +234,11 @@ end
 
 function map_collide(obj, flag)
 	-- moving to tile x,y ...
-	local x1,y1=obj.tomx,obj.tomy	
+	local x1,y1=obj.tomx,obj.tomy
 	--debug
-	xy={x1=x1*8,y1=y1*8,x2=x1*8+7,y2=y1*8+7}
-	add(debug,xy)
-		
+	--xy={x1=x1*8,y1=y1*8,x2=x1*8+7,y2=y1*8+7}
+	--add(debug,xy)
+
 	return fget(mget(x1,y1),flag)
 
 end
@@ -374,9 +374,10 @@ function attack(obj,target)
 			colr=8
 			sprn=43
 		end
-		addflt(target,"-"..obj.level,colr)
+		local dmg=max(1,result)
+		addflt(target,"-"..dmg,colr)
 		addmsg(obj.name.." attack hit!",t,8)
-		target.hp-=obj.level
+		target.hp-=dmg
 		addhit(target,dspr)
 		if target.hp<=0 then
 			sfx(6)
@@ -450,9 +451,9 @@ function findpath(ox,oy,tx,ty,depth)
 	printh("->search ends.")
 	local path={} 
 	local i=0
-	while curr do
-		printh(">>step:"..i.." ("..curr.x..","..curr.y..")")
-		curr=curr.from
+	while cur do
+		printh(">>step:"..i.." ("..cur.x..","..cur.y..")")
+		cur=cur.from
 		i+=1
 	end
 end
@@ -553,21 +554,20 @@ function mob_hit(mob,obj)
 end
 
 function think(mob)
+	local valid={}
 	for ds in all(directions) do
 		mob.tomx=ds[1]+mob.mapx
 		mob.tomy=ds[2]+mob.mapy
-		if map_collide(mob,0) then
-			mob.tomx=mob.mapx
-			mob.tomy=mob.mapy
-		else
-			local decision=flr(rnd(3))
-			if decision==0 then
-				break
-			else
-				mob.tomx=mob.mapx
-				mob.tomy=mob.mapy
-			end
+		if not map_collide(mob,0) then
+			add(valid,ds)
 		end
+	end
+	mob.tomx=mob.mapx
+	mob.tomy=mob.mapy
+	if #valid>0 and flr(rnd(3))==0 then
+		local ds=valid[flr(rnd(#valid))+1]
+		mob.tomx=ds[1]+mob.mapx
+		mob.tomy=ds[2]+mob.mapy
 	end
 end
 
@@ -684,7 +684,6 @@ function update_messages()
 		if ms.frames == 
 					ms.duration then
 			del(msgs,ms)
-			ms=nil
 		else
 			ms.frames+=1
 		end
@@ -695,7 +694,6 @@ function update_flts()
 	for fl in all(flts) do
 		if fl.frames==50 then
 			del(flts,fl)
-			fl=nil
 		else
 			fl.frames+=1
 			fl.y-=(fl.y-fl.tgr)/10
@@ -916,7 +914,7 @@ end
 
 function findtbl(tbl,ob)
 	for t in all(tbl) do
-		if (t==obj) return t
+		if (t==ob) return t
 	end
 	return nil
 end
