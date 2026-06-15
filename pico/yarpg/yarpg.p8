@@ -114,7 +114,6 @@ function update_player()
 		if btn(⬆️) then
 			me.flipx=false
 			me.tomy-=1
-			findpath(me.mapx,me.mapy,7,7,20)
 		elseif btn(⬇️) then
 			me.flipx=true
 			me.tomy+=1
@@ -409,71 +408,38 @@ function rolldef(obj)
 	return d6(2)+obj.level+obj.defense
 end
 
-function newcell(_x,_y,_from)
-	return {
-		x=_x,
-		y=_y,
-		from=_from
-	}
-end
-
--- ob: source obj
--- tg: target obj
--- depth: how deep to search
+-- bfs from (ox,oy) toward (tx,ty).
+-- returns {x,y} of first step,
+-- or nil if already there / unreachable.
 function findpath(ox,oy,tx,ty,depth)
-	printh()
-	printh("findpath("..ox..","..oy..","..tx..","..ty..","..depth..")")
-	local vist=0
-	local minfo={}
-	local cells,cur,fnd=0,nil,false
-	local start=newcell(ox,oy,nil)
-	equeue(minfo,start)
-	while vist<=depth do
-		vist+=1
-		cur=dqueue(minfo)
-		printh("->inspect cur: ("..cur.x..","..cur.y..") - visit: "..vist)
-		fnd=cur.x==tx and cur.y==ty
-		if fnd then
-			printh("->found! cur==tg")
-			break
-		end
-		local cs=mvcells(cur.x,cur.y)
-		printh("->found #"..#cs.." cells")
-		for p in all(cs) do
-			local nc=newcell(
-				p.x,p.y,cur
-			)
-			equeue(minfo,nc)
-			printh("added to m info->p.x:"..p.x.." p.y:"..p.y)
-		end
-		printh("->minfo #="..#minfo)
+	if ox==tx and oy==ty then
+		return nil
 	end
-	printh("->search ends.")
-	local path={} 
-	local i=0
-	while cur do
-		printh(">>step:"..i.." ("..cur.x..","..cur.y..")")
-		cur=cur.from
-		i+=1
-	end
-end
-
-function mvcells(mx,my)
-	printh("getmovcells("..mx..","..my..")")
-	local cs={}
-	for ds in all(directions) do
-		local xx=ds[1]+mx
-		local yy=ds[2]+my
-		printh("->cell ("..xx..","..yy..")")
-		if xx>0 and yy>0 then
-			if not fget(mget(xx,yy),0) then
-				add(cs,{x=xx,y=yy})
-				printh("->can move to ("..xx..","..yy..")")
+	local queue={}
+	local visited={}
+	equeue(queue,{x=ox,y=oy,fs=nil})
+	visited[ox..","..oy]=true
+	local steps=0
+	while #queue>0 and steps<depth do
+		steps+=1
+		local cur=dqueue(queue)
+		for ds in all(directions) do
+			local nx=ds[1]+cur.x
+			local ny=ds[2]+cur.y
+			local k=nx..","..ny
+			if nx>0 and ny>0
+			and not visited[k]
+			and not fget(mget(nx,ny),0) then
+				visited[k]=true
+				local fs=cur.fs or {x=nx,y=ny}
+				if nx==tx and ny==ty then
+					return fs
+				end
+				equeue(queue,{x=nx,y=ny,fs=fs})
 			end
 		end
 	end
-	printh("end mvcells()") 
-	return cs
+	return nil
 end
 
 --
@@ -554,6 +520,18 @@ function mob_hit(mob,obj)
 end
 
 function think(mob)
+	-- 2/3 chance: chase player via bfs
+	if flr(rnd(3))>0 then
+		local step=findpath(
+			mob.mapx,mob.mapy,
+			me.mapx,me.mapy,15)
+		if step then
+			mob.tomx=step.x
+			mob.tomy=step.y
+			return
+		end
+	end
+	-- 1/3 or unreachable: random wander
 	local valid={}
 	for ds in all(directions) do
 		mob.tomx=ds[1]+mob.mapx
@@ -564,7 +542,7 @@ function think(mob)
 	end
 	mob.tomx=mob.mapx
 	mob.tomy=mob.mapy
-	if #valid>0 and flr(rnd(3))==0 then
+	if #valid>0 then
 		local ds=valid[flr(rnd(#valid))+1]
 		mob.tomx=ds[1]+mob.mapx
 		mob.tomy=ds[2]+mob.mapy
