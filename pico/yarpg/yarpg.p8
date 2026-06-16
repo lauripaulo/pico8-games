@@ -133,6 +133,12 @@ spr_player_dead=43
 player_sprite_speed=.8
 mob_sprite_speed=.2
 
+-- colors
+color_damage=9
+color_player_hit=8
+color_heal=11
+color_level_up=10
+
 -- player initial stats
 player_init_attack=5
 player_init_defense=5
