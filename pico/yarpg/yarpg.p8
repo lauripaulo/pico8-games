@@ -50,7 +50,9 @@ function game_init()
 		atack=5,
 		defense=5,
 		maxhp=4,
-		hp=4
+		hp=4,
+		xp=0,
+		xpnext=5
 	}
 	
 	state={
@@ -383,7 +385,7 @@ function attack(obj,target)
 			colr=8
 			sprn=43
 		end
-		local dmg=max(1,obj.attack)
+		local dmg=max(1,obj.atack)
 		addflt(target,"-"..dmg,colr)
 		addmsg(obj.name.." attack hit!",t,8)
 		target.hp-=dmg
@@ -391,6 +393,12 @@ function attack(obj,target)
 		if target.hp<=0 then
 			sfx(6)
 			addstill(target.x,target.y,sprn)
+			if target!=me then
+				local gold=target.level*d6(1)
+				me.gold+=gold
+				addflt(me,"+"..gold.."g",11)
+				gain_xp(target.level*2)
+			end
 		else
 			sfx(5)
 			addhit(target,hspr)
@@ -399,6 +407,21 @@ function attack(obj,target)
 		addhit(target,mspr)
 		addmsg(obj.name.." attack miss",t,3)
 		sfx(7)
+	end
+end
+
+function gain_xp(amount)
+	me.xp+=amount
+	if me.xp>=me.xpnext then
+		me.xp-=me.xpnext
+		me.xpnext=flr(me.xpnext*1.5)
+		me.level+=1
+		me.atack+=1
+		me.defense+=1
+		me.maxhp+=1
+		me.hp=me.maxhp
+		addmsg("level up! lv."..me.level,2,10)
+		sfx(3)
 	end
 end
 
@@ -583,7 +606,7 @@ function newmob(mx,my,typ)
 		mob.name="green ooze"
 		mob.level=1
 		mob.hp=3
-		mob.atack=1
+		mob.attack=1
 		mob.defense=2
 	elseif typ=="zombie" then
 		mob.sprs={204,205,206}
@@ -592,7 +615,7 @@ function newmob(mx,my,typ)
 		mob.name="zombie"
 		mob.level=2
 		mob.hp=2
-		mob.atack=1
+		mob.attack=1
 		mob.defense=3
 	else
 		mob.sprs={196,197,198}
@@ -601,7 +624,7 @@ function newmob(mx,my,typ)
 		mob.name="skeleton"
 		mob.level=1
 		mob.hp=1
-		mob.atack=1
+		mob.attack=1
 		mob.defense=2
 	end
 	return mob
@@ -855,13 +878,10 @@ function draw_info()
 	print("gold:"..me.gold,1+8*11,(14*8)+2,7)
 
  -- stats
-	print("level:"..me.level.." atk:"..me.atack.." def:"..me.defense,4,(15*8)+1,10)
+	print("lv:"..me.level.." atk:"..me.atack.." def:"..me.defense,4,(15*8)+1,10)
 
- -- map
-	print("("..me.mapx..","..me.mapy..")",1+8*13,(15*8)+1,10)
-
- -- frames
-	print(state.frames,1+8*11,(15*8)+1,11)
+ -- xp
+	print("xp:"..me.xp.."/"..me.xpnext,1+8*10,(15*8)+1,11)
 	if state.frames>999 then
 		state.frames=0
 	end
