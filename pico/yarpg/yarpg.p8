@@ -37,9 +37,9 @@ function game_init()
 		sprmx=1,
 		sprmy=1,
 		tspr=0,
-		sprs={52,53,54,55}, -- sprites
+		sprs=spr_player,
 		cspr=1,	-- current sprite
-		vspr=.8, -- incr chg sprite
+		vspr=player_sprite_speed,
 		flipx=false,
 		moving=false,
 		pxmoved=0,
@@ -47,10 +47,10 @@ function game_init()
 		gold=0,
 		bpress=false,
 		level=1,
-		attack=5,
-		defense=5,
-		maxhp=4,
-		hp=4,
+		atack=player_init_atack,
+		defense=player_init_defense,
+		maxhp=player_init_maxhp,
+		hp=player_init_maxhp,
 		xp=0,
 		xpnext=5
 	}
@@ -78,23 +78,66 @@ function game_init()
 		{ 1,0},{0,-1},
 		{-1,0},{0, 1}
 	}
-	
-	-- draw debug table
-	debug={}
-	
+
 	-- events
 	msgs={}
 	hits={}
 	flts={}
 	still={}
-	
+
 	-- sprite animations
-	mspr={23,24,25,26}
-	dspr={11,12,13,14}
-	hspr={27,28,29,30}
+	mspr=spr_miss
+	dspr=spr_damage
+	hspr=spr_hit
 	
 	printh("=-=-=-=-=-=-=")
 end
+-->8
+-- constants
+
+-- tile ids
+tile_door_closed=219
+tile_door_open=220
+tile_door_locked=224
+tile_door_unlocked=225
+tile_key=36
+tile_key_taken=37
+tile_chest=38
+tile_chest_open=39
+tile_npc=64
+
+-- map flags
+flag_wall=0
+flag_door=1
+flag_key=2
+flag_chest=3
+flag_npc=5
+
+-- sprite ids
+spr_player={52,53,54,55}
+spr_miss={23,24,25,26}
+spr_damage={11,12,13,14}
+spr_hit={27,28,29,30}
+spr_skeleton={196,197,198}
+spr_ooze={201,202,203}
+spr_zombie={204,205,206}
+
+-- sprite outline (for otspr)
+spr_outline_color=0
+
+-- sprite for dead bodies
+spr_miss_body=44
+spr_player_dead=43
+
+-- animation speeds
+player_sprite_speed=.8
+mob_sprite_speed=.2
+
+-- player initial stats
+player_init_atack=5
+player_init_defense=5
+player_init_maxhp=4
+
 -->8
 -- player
 
@@ -140,14 +183,14 @@ end
 --
 function eval_playermove()
 	local mobhit,mob=hit_mob(me)
-		if map_collide(me,0) then
-			if map_collide(me,1) then
+		if map_collide(me,flag_wall) then
+			if map_collide(me,flag_door) then
 				found_door(me.tomx,me.tomy)
-			elseif map_collide(me,2) then
+			elseif map_collide(me,flag_key) then
 				found_key(me.tomx,me.tomy)
-			elseif map_collide(me,3) then
+			elseif map_collide(me,flag_chest) then
 				found_chest(me.tomx,me.tomy)
-			elseif map_collide(me,5) then
+			elseif map_collide(me,flag_npc) then
 				found_npc(me.tomx,me.tomy)
 			else
 				sfx(0)
@@ -166,18 +209,18 @@ end
 
 function found_door(mlx,mly)
 	local door=mget(mlx,mly)
-	if door==219 then
+	if door==tile_door_closed then
 		addmsg("found a door",.5,0)
-		mset(mlx,mly,220)
+		mset(mlx,mly,tile_door_open)
 		sfx(1)
 	elseif me.keys>0 then
-		if door==224 then
+		if door==tile_door_locked then
 			addmsg("door open!",.5,0)
 			me.keys-=1
-			mset(mlx,mly,225)
+			mset(mlx,mly,tile_door_unlocked)
 		end
-		sfx(1)				
-	else 
+		sfx(1)
+	else
 		-- cant open
 		addmsg("door locked!",.5,0)
 		sfx(0)
@@ -187,8 +230,8 @@ end
 function found_key(mlx,mly)
 	addmsg("found key.",.5,0)
 	local key=mget(mlx,mly)
-	if key==36 then
-		mset(mlx,mly,37)
+	if key==tile_key then
+		mset(mlx,mly,tile_key_taken)
 		me.keys+=1
 		sfx(3)
 	else
@@ -199,13 +242,13 @@ end
 
 function found_chest(mlx,mly)
 	local chest=mget(mlx,mly)
-	if chest==38 then
-		mset(mlx,mly,39)
+	if chest==tile_chest then
+		mset(mlx,mly,tile_chest_open)
 		local gold=roll_gold()
 		me.gold+=gold
 		addmsg("found "..gold.." coins.",.5,11)
 		sfx(4)
-	else 
+	else
 		-- already looted
 		sfx(0)
 	end
@@ -213,7 +256,7 @@ end
 
 function found_npc(mlx,mly)
 	local npc=mget(mlx,mly)
-	if npc==64 then
+	if npc==tile_npc then
 		addmsg("it's dangerous to go alone.",1,12)
 		sfx(4)
 	end
@@ -244,14 +287,8 @@ function anispr(s)
 end
 
 function map_collide(obj, flag)
-	-- moving to tile x,y ...
 	local x1,y1=obj.tomx,obj.tomy
-	--debug
-	--xy={x1=x1*8,y1=y1*8,x2=x1*8+7,y2=y1*8+7}
-	--add(debug,xy)
-
 	return fget(mget(x1,y1),flag)
-
 end
 
 function movesprs()
@@ -286,7 +323,6 @@ function calc_move(ob)
 	if ob.pxmoved==8 then
 		ob.moving=false
 		ob.pxmoved=0
-		debug={}
 		state.update_mobs=false
 		state.resolve_collisions=false
 		state.moveinmap=false
@@ -379,13 +415,13 @@ function attack(obj,target)
 	local atk=rollatk(obj)
 	local def=rolldef(target)
 	local result=atk-def
-	local colr,sprn=10,44
+	local colr,sprn=color_damage,spr_miss_body
 	if result>=0 then
-		if target==me then 
-			colr=8
-			sprn=43
+		if target==me then
+			colr=color_player_hit
+			sprn=spr_player_dead
 		end
-		local dmg=max(1,obj.attack)
+		local dmg=max(1,obj.atack)
 		addflt(target,"-"..dmg,colr)
 		addmsg(obj.name.." attack hit!",t,8)
 		target.hp-=dmg
@@ -396,7 +432,7 @@ function attack(obj,target)
 			if target!=me then
 				local gold=target.level*d6(1)
 				me.gold+=gold
-				addflt(me,"+"..gold.."g",11)
+				addflt(me,"+"..gold.."g",color_heal)
 				gain_xp(target.level*2)
 			end
 		else
@@ -416,11 +452,11 @@ function gain_xp(amount)
 		me.xp-=me.xpnext
 		me.xpnext=flr(me.xpnext*1.5)
 		me.level+=1
-		me.attack+=1
+		me.atack+=1
 		me.defense+=1
 		me.maxhp+=1
 		me.hp=me.maxhp
-		addmsg("level up! lv."..me.level,2,3)
+		addmsg("level up! lv."..me.level,2,color_level_up)
 		sfx(3)
 	end
 end
@@ -462,7 +498,7 @@ function findpath(ox,oy,tx,ty,depth)
 			local k=nx..","..ny
 			if nx>0 and ny>0
 			and not visited[k]
-			and not fget(mget(nx,ny),0) then
+			and not fget(mget(nx,ny),flag_wall) then
 				visited[k]=true
 				local fs=cur.fs or {x=nx,y=ny}
 				if nx==tx and ny==ty then
@@ -568,7 +604,7 @@ function think(mob)
 	for ds in all(directions) do
 		mob.tomx=ds[1]+mob.mapx
 		mob.tomy=ds[2]+mob.mapy
-		if not map_collide(mob,0) then
+		if not map_collide(mob,flag_wall) then
 			add(valid,ds)
 		end
 	end
@@ -600,31 +636,31 @@ function newmob(mx,my,typ)
 		chasing=false
 	}
 	if typ=="ooze" then
-		mob.sprs={201,202,203}
+		mob.sprs=spr_ooze
 		mob.cspr=1
-		mob.vspr=.2
+		mob.vspr=mob_sprite_speed
 		mob.name="green ooze"
 		mob.level=1
 		mob.hp=3
-		mob.attack=1
+		mob.atack=1
 		mob.defense=2
 	elseif typ=="zombie" then
-		mob.sprs={204,205,206}
+		mob.sprs=spr_zombie
 		mob.cspr=1
-		mob.vspr=.2
+		mob.vspr=mob_sprite_speed
 		mob.name="zombie"
 		mob.level=2
 		mob.hp=2
-		mob.attack=1
+		mob.atack=1
 		mob.defense=3
 	else
-		mob.sprs={196,197,198}
+		mob.sprs=spr_skeleton
 		mob.cspr=1
-		mob.vspr=.2
+		mob.vspr=mob_sprite_speed
 		mob.name="skeleton"
 		mob.level=1
 		mob.hp=1
-		mob.attack=1
+		mob.atack=1
 		mob.defense=2
 	end
 	return mob
@@ -756,7 +792,6 @@ function game_draw()
 	draw_mobs()	
 	draw_hits()
 	draw_flts()
-	--draw_debug()
 	camera()
 	draw_info()	
 	draw_messages()
@@ -764,13 +799,13 @@ end
 
 function draw_hits()
 	for h in all(hits) do
-		otspr(h.sprs[h.cspr],0,h.ob.x,h.ob.y,1,1)
+		otspr(h.sprs[h.cspr],spr_outline_color,h.ob.x,h.ob.y,1,1)
 	end
 end
 
 function draw_still()
 	for h in all(still) do
-		otspr(h.sprn,0,h.x,h.y)
+		otspr(h.sprn,spr_outline_color,h.x,h.y)
 	end
 end
 
@@ -812,28 +847,6 @@ function draw_map()
 -- print ("mappx:"..mappx.."/mappy:"..mappy)
 	camera(mappx,mappy,0,0,4,4,0) 
 	mapdraw()
-end
-
---function draw_map()
--- local ctrx=(128/2)-4
--- local ctry=(128/2)-4
--- if me.x>ctrx and me.y<ctry then
---		camera(-64+me.x+4,0,0,0,4,4,0) 
---	elseif me.x<ctrx and me.y>ctry then
---	 camera(0,-64+me.y+4,0,0,4,4,0)
---	elseif me.x>ctrx and me.y>ctry then
---	 camera(-64+me.x+4,0,-64+me.y+4,0,0,4,4,0)
---	else 
---		camera()
--- end
---	mapdraw(0, 0, 0, 0, 16, 13)
---end
-
-function draw_debug()
-	-- debug boxes
-	for obj in all(debug) do
-		rect(obj.x1,obj.y1,obj.x2,obj.y2,8)	
-	end
 end
 
 function draw_mobs()
