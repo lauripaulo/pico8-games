@@ -47,7 +47,7 @@ function game_init()
 		gold=0,
 		bpress=false,
 		level=1,
-		atack=player_init_atack,
+		attack=player_init_attack,
 		defense=player_init_defense,
 		maxhp=player_init_maxhp,
 		hp=player_init_maxhp,
@@ -134,7 +134,7 @@ player_sprite_speed=.8
 mob_sprite_speed=.2
 
 -- player initial stats
-player_init_atack=5
+player_init_attack=5
 player_init_defense=5
 player_init_maxhp=4
 
@@ -421,7 +421,7 @@ function attack(obj,target)
 			colr=color_player_hit
 			sprn=spr_player_dead
 		end
-		local dmg=max(1,obj.atack)
+		local dmg=max(1,obj.attack)
 		addflt(target,"-"..dmg,colr)
 		addmsg(obj.name.." attack hit!",t,8)
 		target.hp-=dmg
@@ -452,7 +452,7 @@ function gain_xp(amount)
 		me.xp-=me.xpnext
 		me.xpnext=flr(me.xpnext*1.5)
 		me.level+=1
-		me.atack+=1
+		me.attack+=1
 		me.defense+=1
 		me.maxhp+=1
 		me.hp=me.maxhp
@@ -642,7 +642,7 @@ function newmob(mx,my,typ)
 		mob.name="green ooze"
 		mob.level=1
 		mob.hp=3
-		mob.atack=1
+		mob.attack=1
 		mob.defense=2
 	elseif typ=="zombie" then
 		mob.sprs=spr_zombie
@@ -651,7 +651,7 @@ function newmob(mx,my,typ)
 		mob.name="zombie"
 		mob.level=2
 		mob.hp=2
-		mob.atack=1
+		mob.attack=1
 		mob.defense=3
 	else
 		mob.sprs=spr_skeleton
@@ -660,7 +660,7 @@ function newmob(mx,my,typ)
 		mob.name="skeleton"
 		mob.level=1
 		mob.hp=1
-		mob.atack=1
+		mob.attack=1
 		mob.defense=2
 	end
 	return mob
