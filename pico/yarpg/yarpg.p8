@@ -47,7 +47,7 @@ function game_init()
 		gold=0,
 		bpress=false,
 		level=1,
-		atack=5,
+		attack=5,
 		defense=5,
 		maxhp=4,
 		hp=4,
@@ -385,7 +385,7 @@ function attack(obj,target)
 			colr=8
 			sprn=43
 		end
-		local dmg=max(1,obj.atack)
+		local dmg=max(1,obj.attack)
 		addflt(target,"-"..dmg,colr)
 		addmsg(obj.name.." attack hit!",t,8)
 		target.hp-=dmg
@@ -416,11 +416,11 @@ function gain_xp(amount)
 		me.xp-=me.xpnext
 		me.xpnext=flr(me.xpnext*1.5)
 		me.level+=1
-		me.atack+=1
+		me.attack+=1
 		me.defense+=1
 		me.maxhp+=1
 		me.hp=me.maxhp
-		addmsg("level up! lv."..me.level,2,10)
+		addmsg("level up! lv."..me.level,2,3)
 		sfx(3)
 	end
 end
@@ -434,7 +434,7 @@ function d6(num)
 end
 
 function rollatk(obj)
-	return d6(2)+obj.level+obj.atack
+	return d6(2)+obj.level+obj.attack
 end
 
 function rolldef(obj)
@@ -878,7 +878,7 @@ function draw_info()
 	print("gold:"..me.gold,1+8*11,(14*8)+2,7)
 
  -- stats
-	print("lv:"..me.level.." atk:"..me.atack.." def:"..me.defense,4,(15*8)+1,10)
+	print("lv:"..me.level.." atk:"..me.attack.." def:"..me.defense,4,(15*8)+1,10)
 
  -- xp
 	print("xp:"..me.xp.."/"..me.xpnext,1+8*10,(15*8)+1,11)
